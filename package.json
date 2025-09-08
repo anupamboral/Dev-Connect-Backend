@@ -1,0 +1,21 @@
+{
+  "name": "dev-connect-backend",
+  "version": "1.0.0",
+  "description": "make connection with other developers",
+  "keywords": [
+    "javascript",
+    "node",
+    "js"
+  ],
+  "license": "ISC",
+  "author": "Anupam",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/app.js",
+    "dev": "nodemon ./src/app.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
