@@ -4,22 +4,24 @@ const express = require("express"); //* this require("express") returns a functi
 const app = express(); //* this function call returns the express js application, so here we are creating the instance of the express js application.
 //* basically we are creating a web server using express js .
 
-//* accessing params and using dynamic routes
-//* So when here we mention the path , we use user/:userId , here using colon /: means it is a dynamic route , so in the in the place of /:userId the user can pass any parameter from the browser like user/7777 so here 7777 is the userID parameter passed by the user.and we can mention multiple dynamic routes like /user/:userId/:name/:pass.
-app.get("/user/:userId/:name/:pass", (req, res) => {
-  //* whatever parameter the user pass from the browser/postman we can access that here using req.params, like the user is making req to the url localhost:3000/user/7777/anupam/testing. So the params wil be like below:
+//? we can write multiple request handlers for the same path. To do that we can use a third parameter of the get method, which is another route handler function , if we don't send any response from the first handler, will it go to the second handler automatically?
+//* No , the request will still hangout ,and not go to the the second handler
+//* to send the request to the second handler , in the first handler function we have tpo mention another parameter , named "next", and call it inside the first handler, only then it will go to the second handler, this next is a function given by express.then only response 2 will be sent to postman/browser.
 
-  console.log(req.params); //*{userId: '7777',name: 'anupam',pass: 'testing'}
-  res.send("firstName:`anupam`,lastName:`boral`");
-});
-
-//*In express 5, the characters ?, +, *, [], and () are handled differently than in version 4, please review the migration guide for more information.basically in the advanced you can't use it inside the route  handlers path.in the browser while doing the query we can use them but inside the handler function path we can't use them.
-//* accessing query params
-app.get("/user", (req, res) => {
-  //* if the user do a query from the browser like /user?userid=101&pass=testing , the part after the ? is the query parameters and if we want we can access the quey params here using req.query.
-  console.log(req.query); //*{ userid: '101', pass: 'testing' }
-  res.send("firstName:`anupam`,lastName:`boral`");
-});
+//? but what if we send the response from the first handler and also call the next() function, will it send 2 responses, will it go to the second handler/
+//* first it will send the first response then because we we called the next()  function it will go to the second handler , and print the console.log but then when sending the second response it will throw an error, as javascript waits for none , so it started to execute the second handler because next() was called , but but when postman send request to our server a socket connection was made , and as soon as we sent the first response the socket connection was closed , that's why when our server will try to send the second response it will through an error that , the response has already sent. the error will be shown in the terminal - (Cannot set headers after they are sent to the client).
+app.get(
+  "/user",
+  (req, res, next) => {
+    console.log("route handler 1");
+    res.send("response 1");
+    next();
+  },
+  (req, res) => {
+    console.log("route handler 2");
+    res.send("response 2");
+  }
+);
 
 //* now using this web server we have to listen for incoming requests on some port , so any body can connect to us using that port.
 app.listen(3000, () => {

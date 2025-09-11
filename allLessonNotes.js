@@ -23,7 +23,7 @@ const app = express(); //* this function call returns the express js application
 //* basically we are creating a web server using express js .
 
 //* we need to handle the incoming requests and send them response.
-//* So we need a request handler function , so here to handle requests we are going to use use() function.the first param is the path , if we don't mention the first param then the response will be same for all the paths, bt when we specify the path then the response will be only specific to the path mentioned
+//* So we need a request handler/route handler function , so here to handle requests we are going to use use() function.the first param is the path , if we don't mention the first param then the response will be same for all the paths, bt when we specify the path then the response will be only specific to the path mentioned
 // app.use("/home", (req, res) => {
 //   res.send("hello from home page"); //* on the response we can call the send method to actually send any response to the client/browser.
 // });
@@ -85,7 +85,7 @@ app.listen(3000, () => {
 // app.use("/user", (req, res) => {
 //   res.send("testing is good😉😉😉");
 // });
-
+//* Different route handler methods(get/post/patch/delete)
 //* this get method will be only triggered by GET call
 app.get("/user", (req, res) => {
   res.send("firstName:`anupam`,lastName:`boral`");
@@ -116,7 +116,7 @@ app.use("/test", (req, res) => {
   res.send("testing is good😉😉😉");
 });
 
-//* accessing params and using dynamic routes
+//* using dynamic routes and  accessing dynamic route params from the code
 //* So when here we mention the path , we use user/:userId , here using colon /: means it is a dynamic route , so in the in the place of /:userId the user can pass any parameter from the browser like user/7777 so here 7777 is the userID parameter passed by the user.and we can mention multiple dynamic routes like /user/:userId/:name/:pass.
 app.get("/user/:userId/:name/:pass", (req, res) => {
   //* whatever parameter the user pass from the browser/postman we can access that here using req.params, like the user is making req to the url localhost:3000/user/7777/anupam/testing. So the params wil be like below:
@@ -132,3 +132,24 @@ app.get("/user", (req, res) => {
   console.log(req.query); //*{ userid: '101', pass: 'testing' }
   res.send("firstName:`anupam`,lastName:`boral`");
 });
+
+//! Season 2 - Episode - 05 - Middleware and error handlers
+//* Inside the route handler function, we were sending the response using res.send(), but if we don't send any response, then it the browser/postman will just wait and after some time trying the timeout happens and it will show timeout ,got no response, owe should always send some response from route handlers.
+//? we can write multiple request handlers for the same path. To do that we can use a third parameter of the get method, which is another route handler function , if we don't send any response from the first handler, will it go to the second handler automatically?
+//* No , the request will still hangout ,and not go to the the second handler
+//* to send the request to the second handler , in the first handler function we have tpo mention another parameter , named "next", and call it inside the first handler, only then it will go to the second handler, this next is a function given by express.then only response 2 will be sent to postman/browser.
+
+//? but what if we send the response from the first handler and also call the next() function, will it send 2 responses, will it go to the second handler/
+//* first it will send the first response then because we we called the next()  function it will go to the second handler , and print the console.log but then when sending the second response it will throw an error, as javascript waits for none , so it started to execute the second handler because next() was called , but but when postman send request to our server a socket connection was made , and as soon as we sent the first response the socket connection was closed , that's why when our server will try to send the second response it will through an error that , the response has already sent. the error will be shown in the terminal - (Cannot set headers after they are sent to the client).
+app.get(
+  "/user",
+  (req, res, next) => {
+    console.log("route handler 1");
+    res.send("response 1");
+    next();
+  },
+  (req, res) => {
+    console.log("route handler 2");
+    res.send("response 2");
+  }
+);
