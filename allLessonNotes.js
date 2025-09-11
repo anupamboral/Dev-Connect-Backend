@@ -115,3 +115,20 @@ app.delete("/user", (req, res) => {
 app.use("/test", (req, res) => {
   res.send("testing is good😉😉😉");
 });
+
+//* accessing params and using dynamic routes
+//* So when here we mention the path , we use user/:userId , here using colon /: means it is a dynamic route , so in the in the place of /:userId the user can pass any parameter from the browser like user/7777 so here 7777 is the userID parameter passed by the user.and we can mention multiple dynamic routes like /user/:userId/:name/:pass.
+app.get("/user/:userId/:name/:pass", (req, res) => {
+  //* whatever parameter the user pass from the browser/postman we can access that here using req.params, like the user is making req to the url localhost:3000/user/7777/anupam/testing. So the params wil be like below:
+
+  console.log(req.params); //*{userId: '7777',name: 'anupam',pass: 'testing'}
+  res.send("firstName:`anupam`,lastName:`boral`");
+});
+
+//*In express 5, the characters ?, +, *, [], and () are handled differently than in version 4, please review the migration guide for more information.basically in the advanced you can't use it inside the route  handlers path.in the browser while doing the query we can use them but inside the handler function path we can't use them.
+//* accessing query params
+app.get("/user", (req, res) => {
+  //* if the user do a query from the browser like /user?userid=101&pass=testing , the part after the ? is the query parameters and if we want we can access the quey params here using req.query.
+  console.log(req.query); //*{ userid: '101', pass: 'testing' }
+  res.send("firstName:`anupam`,lastName:`boral`");
+});
