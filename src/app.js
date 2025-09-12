@@ -71,6 +71,121 @@ app.get("/address", [
   },
 ]);
 
+//*even we can mix both , so in a single http method , we can use separate function and also a array of route handler functions, like below
+app.get(
+  "/address",
+  [
+    (req, res, next) => {
+      console.log("route handler 1");
+      next();
+    },
+    (req, res, next) => {
+      console.log("route handler 2");
+      next();
+    },
+  ],
+  (req, res, next) => {
+    console.log("route handler 3");
+    next();
+  },
+  (req, res, next) => {
+    console.log("route handler 3");
+    res.send("ye duniye hi abhi ka address hai😋😉😉");
+  }
+);
+
+//* we can even create independent route handlers for the same path iit will work exactly same but remember order matters because js engine will run the code line by line one after another.
+app.get("/address", (req, res, next) => {
+  console.log("route handler 1");
+  next();
+});
+app.get("/address", (req, res, next) => {
+  console.log("route handler 2");
+  res.send("ye duniye hi abhi ka address hai😋😉😉");
+});
+
+//? but why do we need so many request handlers for a /path?
+//* the reason is middleware
+//*! Middleware
+//* actually till this time, we were calling all the handler functions as request/route handler , but when we write multiple handler functions, and in the last handler we send the response , that specific handler which is sending the response is actually called the request handler or the route handler and the other handlers before it ,are called middleware.let's understand using an example. in the below example we have 4 handler for same /address path, so when a request comes and it matches the path it will go through 1st then 2nd then 3rd handler ane after another line by line and finally in the 4th handler it is sending the response, so the 4th handler is actually the route/request handler and the 1st,2nd, 3rd handlers are called middleware, so we a request comes to an express application it will check the matching path , then go through all middlewares and finally from the route handlers it sends the response. So these words middleware , route handler ,request handler are the lingo used in the industry , actually all these are just functions but developers use these words to explain concepts.
+app.get("/address", [
+  (req, res, next) => {
+    console.log("middleware 1");
+    next();
+  },
+  (req, res, next) => {
+    console.log("middleware 2");
+    next();
+  },
+  (req, res, next) => {
+    console.log("middleware 3");
+    next();
+  },
+  (req, res, next) => {
+    console.log("actual request/route  handler");
+    res.send("Response :- ye duniye hi abhi ka address hai😋😉😉");
+  },
+]);
+//*Tasks performed by middleware:
+//*Execute any code.
+//*Make changes to the request (req) and response (res) objects.
+//*Call the next() middleware function to pass control to the next function in the stack. If next() is not called, the request will be left hanging unless the current middleware ends the response cycle.
+
+//? lets see some use cases of having middleware:-
+//* suppose we have we have two route handlers/apis for two paths very similar, like /admin/getUserData and /admin/deleteUserData.
+//* as this is related to admin we have to verify/authenticate if the user is admin or not by verifying the token sent by the client's browser.
+//* So we can write authentication check logic for both paths , but is it a good way to write the code for same thing twice? No , and that's where middleware come into picture, so instead of writing both like this
+app.get("/admin/getUserData", (req, res, next) => {
+  //* admin auth checking
+  console.log("admin auth is getting checked");
+
+  const token = xyz; //*fake data , in real world token comes with the request.body
+  const isAuthorized = token === "xyz";
+  if (!isAuthorized) {
+    res.status(401).send("Unauthorized request");
+  } else {
+    res.send("User data");
+  }
+});
+app.get("/admin/deleteUserData", (req, res, next) => {
+  //* admin auth checking
+  console.log("admin auth is getting checked");
+
+  const token = xyz; //*fake data , in real world token comes with the request.body
+  const isAuthorized = token === "xyz";
+  if (!isAuthorized) {
+    res.status(401).send("Unauthorized request");
+  } else {
+    res.send("User is deleted");
+  }
+});
+//* see above we have written the same auth code twice for two handlers .
+//*but if we use middleware then we don't need to do it ,see how below(we can use get() also  but normally to handle all kind of http methods we use use() but using get() i8s also fine)
+//* as /admin is generic so it will be triggered for both /admin/getUserData and /admin/deleteUserData as the first portion is same, and here in this middleware we are only checking the auth and ut will check auth for both cases ,so we don;t need to write the same auth code twice, and if the auth is verifies then only the next() function will be called and it will move to actual route handler, unless it will send the response "Unauthorized request" with the status 401.
+app.use("/admin", (req, res, next) => {
+  //* admin auth checking
+  console.log("admin auth is getting checked");
+
+  const token = xyz; //*fake data , in real world token comes with the request.body
+  const isAuthorized = token === "xyz";
+  if (!isAuthorized) {
+    res.status(401).send("Unauthorized request");
+  } else {
+    next(); //*
+  }
+});
+app.get("/admin/getUserData", (req, res, next) => {
+  //* this route handlers will be only called when the auth is correct because of above middleware we written for auth.
+  res.send("User data");
+});
+app.get("/admin/deleteUserData", (req, res, next) => {
+  //* this route handlers will be only called when the auth is correct because of above middleware we written for auth.
+  res.send("user is deleted");
+});
+//* this is the simplest answer why we need middleware.
+//? we can even use app.all() instead of app.use() both has subtle difference, we can learn that just search on google app.use() vs app.all().
+//? and also learn about the https status codes.like 404, 200
+
 //* now using this web server we have to listen for incoming requests on some port , so any body can connect to us using that port.
 app.listen(3000, () => {
   console.log("server is listening successfully on port 3000");
