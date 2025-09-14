@@ -369,3 +369,81 @@ app.use("/", (err, req, res, next) => {
   //* we can also log our error here so we can be notified
   if (err) res.status(500).send("Something went wrong");
 }); //*and always heep this error handler below all apis/route handlers and use try catch blocks to catch errors, because route handlers are read line by line from top to bottom, so order always matters
+
+//* to run above code don't forget to call app.listen(3000) to listen to the requ7est
+//! Season 2 - Episode - 05 - Middleware and error handlers
+//* remember in one of the previous videos we created a cluster inside mongodb atlas. and from the mongodb compass app we connected to the cluster using the connection string , then created a collection and then created documents inside that collection from our code.
+//* now we have to connect this express application to our cluster
+//* now first of all we to create a config folder , so we will create a config folder inside our src folder, so whatever configuration we need to do inside our application we will do inside it.Inside it we will create a file named to database.js to write the logic of connecting to our database.To connect to our database we will be using a important npm library named "Mongoose".
+//* Because This is a standard of building the node JS1 applications right whenever you are connecting your node js application to your Mongo database mongoose is a very elegant very amazing library to create schemas to create models and to talk to your Mongodb database right so we are going to use this library it is very very amazing and it gives you some boilerplate also code also right you can copy this code you can also go and read the documentation the documentation of Mongoose is really very very nice right there are some websites there are some libraries and packages where the documentation is not really good but mongoose has a very good documentation .
+
+//* now first of all let's install the mongoose library using the command - npm i mongoose
+
+//* now let's require mongoose
+const mongoose = require("mongoose");
+
+//* then to connect to ur cluster we will use mongoose.connect("connection string") and pass the connection string and as it returns a promise and tells us if the connection is successfully established or not, so will keep it inside a async function and use await to handle the promise.
+
+const connectDb = async () => {
+  //* it is connecting to the namaste node cluster, if we want to connect to databse then at last after the / we have to mention the database name.
+  await mongoose.connect(
+    "mongodb+srv://anupamboral:KYExuJH0QyiEI6kg@namastenode.cw4mdf8.mongodb.net/"
+  ); //* from mongo compass or our cluster we can copy the connection string
+};
+
+//* now we can call the connectDB() and it will return us a promise so we can handler the it using .then() for successful connection and .catch() for some error
+/*
+connectDb()
+  .then(() => {
+    console.log("successfully connected to the database cluster");
+  })
+  .catch((err) => {
+    console.error("cannot connect to the database");
+  });
+ */
+//! now all this code we have written inside database.js , but the entry point for our app is app.js , so to run this file we have to require this database.js inside app.js .And if we run our code using terminal and see it is working fine and connection is established then it's good . but now we will comment out this connectDb() call  from here this database.js. Because we are listening to requests inside app.js. So when someone requesting to our application , at that database connection should be already established then only our backend application can retrieve any data from the database and respond to the client. So we should only listen to the requests once the database connection is successfully established. So to do that we will export this connectDb() function and import it inside app.js. then in the below portion we will call this function . and we know it will return promise. So we can handle that using then() and catch(). .then() will be only executed when the connection is already established. so we will call app.listen inside the .then method, so we can ensure we are listening to the request once the db is successfully connected.and this is the right way - first connecting to db successfully then listen to the requests.
+
+//* lke this
+/*
+connectDb()
+  .then(() => {
+    console.log("successfully connected to the database cluster");
+    app.listen(3000, () => {
+      console.log("server is listening successfully on port 3000");
+    }); //* using the listen method we listening to the incoming requests on port number 3000, the first parameter of this listen method is the port number , now there is second parameter which is a callback function, and this will be called when our server is up and running.
+  })
+  .catch((err) => {
+    console.error("cannot connect to the database");
+  });*/
+
+//* now we will define our user Schema, we have already discussed that we will have different collection , and one collection will for users.It will store data/documents related to users.
+//* So we have to define a user schema for the use collection.
+//? what is schema?
+//* inside schema , we define that what fields every document will contain inside a collection. And what will be the typeof values for every field , it is like defining whats properties every object will have and what will be the typr of every property inside the object. So inside user collection we will have the data for the user , so we will have multiple user documents, and we are defining what will be the fields/properties for each user document ,and what will be the typeof values for each field like string or number etc. we can learn about schema inside the mongoose documentation.
+//* first of all to create a user Schema , we will create a models folder inside src folder, inside this folder we will create a file names user.js. inside this file we will definer the schema for the user collection.
+//* it is like we are creating a model for the user collection, so we have named folder model.
+//* inside the user.js folder we will define the schema for users.
+//* here we have to require mongoose
+const mongoose = require("mongoose");
+
+//* to create  schema we have to call a method on mongoose named mongoose.Schema({}), inside that we can write a object where we can write the schema for our users, for each field we have to define the type of the value of each field/ property inside a object.
+const userSchema = mongoose.Schema({
+  firstName: {
+    type: String,
+  },
+  lastName: {
+    type: String,
+  },
+  emailId: {
+    type: String,
+  },
+  password: {
+    type: String,
+  },
+  age: {
+    type: Number,
+  },
+  gender: {
+    type: String,
+  },
+});
