@@ -13,9 +13,9 @@ const mongoose = require("mongoose");
 //* then to connect to ur cluster we will use mongoose.connect("connection string") and pass the connection string and as it returns a promise and tells us if the connection is successfully established or not, so will keep it inside a async function and use await to handle the promise.
 
 const connectDb = async () => {
-  //* it is connecting to the namaste node cluster, if we want to connect to databse then at last after the / we have to mention the database name.
+  //* it is connecting to the namaste node cluster, if we want to connect to database then at last after the / we have to mention the database name - .devConnect.
   await mongoose.connect(
-    "mongodb+srv://anupamboral:KYExuJH0QyiEI6kg@namastenode.cw4mdf8.mongodb.net/"
+    "mongodb+srv://anupamboral:KYExuJH0QyiEI6kg@namastenode.cw4mdf8.mongodb.net/devConnect"
   ); //* from mongo compass or our cluster we can copy the connection string
 };
 

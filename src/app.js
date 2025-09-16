@@ -6,6 +6,8 @@ const connectDb = require("./config/database");
 const app = express(); //* this function call returns the express js application, so here we are creating the instance of the express js application.
 //* basically we are creating a web server using express js .
 
+//*making a
+
 connectDb()
   .then(() => {
     console.log("successfully connected to the database cluster");
