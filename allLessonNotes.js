@@ -447,3 +447,43 @@ const userSchema = mongoose.Schema({
     type: String,
   },
 });
+//* this is how we create a schema, this tells us what information we are going to store in the database related to the user.these fields will be present inside the user collection.
+//? How will we use this schema?
+//* to use this schema , we have to create a model, we will call mongoose.model("ModelName",Schema) , and as first argument we will pass the name of the model , then as second argument we will pass the schema we have created.And store this model as value of a constant,as this is of users so we will name the constant - "User". and it is a convention that we should start the name with capital letter , because this model is like a class, as we create many instances from a class, similarly from this model , we will create many user documents inside our user collection, so that's why will start the name off the model constant with capital letter like we do for naming classes.then we will export this model so we can use it.
+const User = mongoose.model("User", userSchema);
+
+//* module.exports = User;
+
+//* now we can create our apis to add a user into our database
+//* now inside our app.js , we will create a api to create a user into our database, so we already know that if we want to create a user then post method is best for that because we want to create some new data/document inside the database.
+
+//* now inside app.js we have to import this model because here in app.js we will use it while creating users.
+//* importing the User model
+const User = require("./models/user");
+
+//* now we can create our apis to add a user into our database
+//* now inside our app.js , we will create a api to create a user into our database, so we already know that if we want to create a user then post method is best for that because we want to create some new data/document inside the database.
+app.post("/signup", async (req, res) => {
+  //* a sample user data
+  const userObj = {
+    firstName: "Virat",
+    lastName: "Kohli",
+    emailId: "virat@kohli.com",
+    password: "virat@123",
+  };
+
+  //!creating instance from User model
+  //* now we want to add this data to our user collection inside the database, so to do that we have to create a instance of the User model, first of all we have to import the User model.now using the User modal we can create a new user , like below(similar to creating a instance from a class)
+  const user = new User(userObj); //* now we have created a new user using the above data abd the User model.In technical language we rae creating a new instance of the User model
+
+  //! saving the user instance inside the database using .save() method
+  await user.save(); //* as user is a instance of a User model and when we call .save() on the user instance it will be saved to the database. and this method call returns a promise so we have to use async await to handle it.
+  //* this will save the user but to ensure we have successfully saved to user to the database we should always send some response to the client.
+  res.send("User added successfully");
+});
+
+//* this will successfully add the user
+
+//! important notes for automatically adding database name , collection name , _id field and __v field.
+//* So inside the mongodb cluster we did not created separate devConnect database , instead we just mentioned  devConnect at the last portion of the connection string  inside database.js. and now whenever we will connect to the database using our code like posting some data , it will automatically make a database named devConnect inside the cluster. and we did not even created any collection named user as we did not event created the database, but as we have created a User model and using the User model's instance we created user named instance and using .save() method when pushed it , mongodb automatically created users named collection and pushed our user document inside that users collection.
+//* the sample data we pushed , mongodb created a document using that data and also added a unique oject Id automatically and also added __v itt means version. So we should never change _id by ourself and let mongo db handle it, and also whenever we update some field from a document mongodb update the the version __v , so we should change __v 's value by ourself.and we can manually upload the id with the data but there is no need to do it as mongodb handles it by itself.
