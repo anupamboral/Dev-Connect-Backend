@@ -375,7 +375,7 @@ app.use("/", (err, req, res, next) => {
 //* remember in one of the previous videos we created a cluster inside mongodb atlas. and from the mongodb compass app we connected to the cluster using the connection string , then created a collection and then created documents inside that collection from our code.
 //* now we have to connect this express application to our cluster
 //* now first of all we to create a config folder , so we will create a config folder inside our src folder, so whatever configuration we need to do inside our application we will do inside it.Inside it we will create a file named to database.js to write the logic of connecting to our database.To connect to our database we will be using a important npm library named "Mongoose".
-//* Because This is a standard of building the node JS1 applications right whenever you are connecting your node js application to your Mongo database mongoose is a very elegant very amazing library to create schemas to create models and to talk to your Mongodb database right so we are going to use this library it is very very amazing and it gives you some boilerplate also code also right you can copy this code you can also go and read the documentation the documentation of Mongoose is really very very nice right there are some websites there are some libraries and packages where the documentation is not really good but mongoose has a very good documentation .
+//* Because This is a standard of building the node JS applications right whenever you are connecting your node js application to your Mongo database mongoose is a very elegant very amazing library to create schemas to create models and to talk to your Mongodb database right so we are going to use this library it is very very amazing and it gives you some boilerplate also code also right you can copy this code you can also go and read the documentation the documentation of Mongoose is really very very nice right there are some websites there are some libraries and packages where the documentation is not really good but mongoose has a very good documentation .
 
 //* now first of all let's install the mongoose library using the command - npm i mongoose
 
@@ -385,7 +385,7 @@ const mongoose = require("mongoose");
 //* then to connect to ur cluster we will use mongoose.connect("connection string") and pass the connection string and as it returns a promise and tells us if the connection is successfully established or not, so will keep it inside a async function and use await to handle the promise.
 
 const connectDb = async () => {
-  //* it is connecting to the namaste node cluster, if we want to connect to databse then at last after the / we have to mention the database name.
+  //* it is connecting to the namaste node cluster, if we want to connect to database then at last after the / we have to mention the database name.
   await mongoose.connect(
     "mongodb+srv://anupamboral:KYExuJH0QyiEI6kg@namastenode.cw4mdf8.mongodb.net/"
   ); //* from mongo compass or our cluster we can copy the connection string
@@ -476,10 +476,16 @@ app.post("/signup", async (req, res) => {
   //* now we want to add this data to our user collection inside the database, so to do that we have to create a instance of the User model, first of all we have to import the User model.now using the User modal we can create a new user , like below(similar to creating a instance from a class)
   const user = new User(userObj); //* now we have created a new user using the above data abd the User model.In technical language we rae creating a new instance of the User model
 
-  //! saving the user instance inside the database using .save() method
-  await user.save(); //* as user is a instance of a User model and when we call .save() on the user instance it will be saved to the database. and this method call returns a promise so we have to use async await to handle it.
-  //* this will save the user but to ensure we have successfully saved to user to the database we should always send some response to the client.
-  res.send("User added successfully");
+  //* whenever ever saving some data to the database or reading some data from the database we should always wrap that operation inside try{}catch{} and always handle errors inside the catch block otherwise your api will show always successful response but you data might not be save due to some issues so always use try{}catch{} to handle issues.
+
+  try {
+    //! saving the user instance inside the database using .save() method
+    await user.save(); //* as user is a instance of a User model and when we call .save() on the user instance it will be saved to the database. and this method call returns a promise so we have to use async await to handle it.
+    //* this will save the user but to ensure we have successfully saved to user to the database we should always send some response to the client.
+    res.send("User added successfully");
+  } catch (err) {
+    res.send(400).send(`Error saving the user:-${err.message}`);
+  } //* status code 400 represents bad request , and we are using it here because we are sending request to the server to save the user data and if the request fails then we can use to 400 status code as it represents bad request.
 });
 
 //* this will successfully add the user
