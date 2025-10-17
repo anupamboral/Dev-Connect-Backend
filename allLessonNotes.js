@@ -371,7 +371,7 @@ app.use("/", (err, req, res, next) => {
 }); //*and always heep this error handler below all apis/route handlers and use try catch blocks to catch errors, because route handlers are read line by line from top to bottom, so order always matters
 
 //* to run above code don't forget to call app.listen(3000) to listen to the requ7est
-//! Season 2 - Episode - 05 - Middleware and error handlers
+//! Season 2 - Episode - 06 - Database,Schema & Models - Mongoose
 //* remember in one of the previous videos we created a cluster inside mongodb atlas. and from the mongodb compass app we connected to the cluster using the connection string , then created a collection and then created documents inside that collection from our code.
 //* now we have to connect this express application to our cluster
 //* now first of all we to create a config folder , so we will create a config folder inside our src folder, so whatever configuration we need to do inside our application we will do inside it.Inside it we will create a file named to database.js to write the logic of connecting to our database.To connect to our database we will be using a important npm library named "Mongoose".
@@ -493,3 +493,86 @@ app.post("/signup", async (req, res) => {
 //! important notes for automatically adding database name , collection name , _id field and __v field.
 //* So inside the mongodb cluster we did not created separate devConnect database , instead we just mentioned  devConnect at the last portion of the connection string  inside database.js. and now whenever we will connect to the database using our code like posting some data , it will automatically make a database named devConnect inside the cluster. and we did not even created any collection named user as we did not event created the database, but as we have created a User model and using the User model's instance we created user named instance and using .save() method when pushed it , mongodb automatically created users named collection and pushed our user document inside that users collection.
 //* the sample data we pushed , mongodb created a document using that data and also added a unique oject Id automatically and also added __v itt means version. So we should never change _id by ourself and let mongo db handle it, and also whenever we update some field from a document mongodb update the the version __v , so we should change __v 's value by ourself.and we can manually upload the id with the data but there is no need to do it as mongodb handles it by itself.
+
+//! Season 2 - Episode - 07 - Diving into apis
+//* till now we are using sample data to save the user to the database, so we were manually creating the user object here inside our api, then using postman we were making post call to our signup api, and saving that manually typed data to the database.
+//* But ideally , the user should fill up the the data on the client side on a sign up form then make the post api call to our sign up api,and express server should receive the request with  data entered by the user dynamically. because then we don't need to write the data manually by ourself. Different users can dynamically enter different kind of data and make a post call to our api to save them as user.
+
+//* Nowadays developers use json(javascript object notation) format, to send data from the client side to server side, previously xml format was widely used, but now developers prefer to use json to interchange data.
+//* below we can understand difference between js object and json.
+
+//!Difference between js object and json(javascript object notation)
+/*
+* JSON (JavaScript Object Notation) and JavaScript objects are related but * distinct concepts. 
+* JavaScript Object: 
+* 
+* • A JavaScript object is a fundamental data structure within the JavaScript * programming language. 
+* • It is used to store collections of data and more complex entities. 
+* • JavaScript objects can contain various data types, including strings, numbers, * booleans, arrays, other objects, functions, and special types like undefined or * Date objects. 
+* • Keys in JavaScript objects can sometimes be unquoted (if they are valid * identifiers) and string values can use either single or double quotes. 
+* • JavaScript objects are directly usable in JavaScript code and can have methods * (functions associated with the object). 
+* 
+* JSON: 
+* 
+* • JSON is a text-based data interchange format, inspired by JavaScript object * literal syntax. 
+* • It is a language-independent format used for storing and exchanging data * between systems, particularly over the web. 
+* • JSON is a string representation of data, not an actual object in a programming * language until it is parsed. 
+* • JSON has a stricter syntax than JavaScript objects: 
+*	• All keys and string values must be enclosed in double quotes. [1]  
+*	• It only supports a limited set of data types: strings, numbers, booleans, *null, objects, and arrays. Functions, undefined, and special JavaScript objects *like Date are not allowed in standard JSON. 
+*	• Comments are not allowed within JSON. 
+*
+*Key Differences Summarized: 
+*
+*| Topic:-------- JavaScript Object v/s JSON  
+*| --- | --- | --- |
+*| Purpose :- In-program data structure | Data interchange format  
+
+*| Data Types :- Supports all JavaScript types (including functions, undefined) | *Limited to strings, numbers, booleans, null, objects, arrays  
+
+*| Syntax :- Keys can be unquoted, single/double quotes for strings | All keys and *string values must be in double quotes  
+
+*| Functionality :- Can contain methods (functions) | Cannot contain functions  
+
+*| Nature :- An actual object in memory | A string representation of data  
+
+*| Language Dependency :- Specific to JavaScript | Language-independent  
+
+*/
+
+//? How will we send data from client (browser/postman) side to server side?
+//* from postman when we make a request/api call to a api, we also send a a request body and headers, using the request body we can send the data entered by the user . and we will send the data in json format.
+//* to send some data using request body using postman, inside postman we have find "Body" written below the the pai url in postman, then select the Body option then we will se many options to send data like- form-data, raw, binary , graphQL,etc. But we want to send the data using json format.
+//*so among these options we can choose raw . after choosing raw again there are many options inside raw like - text, javascript, json,html,xml. As we want to send the data using json , we will select json option among them.and now in the below portion we can write json which we want to sent with the request. if we directly  paste our sample js object in place of json it will not work, becuase the json format is different, in json format even the keys should be inside  "" . and after the last field we can't write .
+//* so this is js object
+/*
+ *{
+ *    firstName: "Rohit",
+ *    lastName: "Sharma",
+ *    emailId: "rohit@sharma.com",
+ *    password: "sharmajikabeta",
+ *  };
+ */
+//* this is json
+/*
+ *{
+ *    "firstName": "Rohit",
+ *    "lastName": "Sharma",
+ *    "emailId": "rohit@sharma.com",
+ *    "password": "sharmajikabeta"--//* here we can't write like objects only after this last field.
+ *  };
+ */
+
+//! dynamically receiving the data from the user and saving that to database
+//* so inside postman , in he body , we chosen raw then json, then we wrote the data using the json format.like above. now it's the time to send the request to our express server.
+//* but how will we see see this request body in our code/express server?
+//* so while creating the signup api, we mention a parameter in the request handler , that is req(request), so inside the request handler if we print this like console.log(req), we will see a large object. this is the request send by by postman and express has converted it to a object and  showing us in the console as we are printing it.
+//* but we can't access the json from this req (request) object directly , even if we print console.log(req.body), it will give us undefined ,because it express js can't read json, that's why it is giving us undefined.
+//* So we need a way to get the json from the request body then convert it to normal javascript object then again put it inside the req.body , so we can easily access it.
+
+//! importance of express.json() middleware.
+//* so to convert the json to js object , we will use a middleware given to us by express.js. and that's express.json(). this middleware can take the json from the req.body then convert that to js object then again put that inside the req.body and we can then easily access it form the request body.
+//* to use it we can just put it inside app.use(express.json())) , like we cerate middlewares, as we know app.use() work for all methods when we specify any path as first arg, but if we don't even specify any path then it will work for all requests with any path . so that's why we are using it without any path so it can work for any api. like this :- app.use(express.json()))
+//* we need to put this above other apis so what ever request comes with json data get converts to the js object and we can easily access the data inside the request handlers req.body.
+//* as soon as we added the middleware above the signup api , now we can easily access the the received data from the client inside our terminal just by printing it.
+//* because of this we can now dynamically receive the data from the client side and use that data to create a instance of User model and save the new user to database.
