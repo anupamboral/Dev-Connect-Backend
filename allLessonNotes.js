@@ -570,9 +570,56 @@ app.post("/signup", async (req, res) => {
 //* but we can't access the json from this req (request) object directly , even if we print console.log(req.body), it will give us undefined ,because it express js can't read json, that's why it is giving us undefined.
 //* So we need a way to get the json from the request body then convert it to normal javascript object then again put it inside the req.body , so we can easily access it.
 
-//! importance of express.json() middleware.
+//! importance of express.json() middleware. (also available in express documentation)
 //* so to convert the json to js object , we will use a middleware given to us by express.js. and that's express.json(). this middleware can take the json from the req.body then convert that to js object then again put that inside the req.body and we can then easily access it form the request body.
 //* to use it we can just put it inside app.use(express.json())) , like we cerate middlewares, as we know app.use() work for all methods when we specify any path as first arg, but if we don't even specify any path then it will work for all requests with any path . so that's why we are using it without any path so it can work for any api. like this :- app.use(express.json()))
 //* we need to put this above other apis so what ever request comes with json data get converts to the js object and we can easily access the data inside the request handlers req.body.
 //* as soon as we added the middleware above the signup api , now we can easily access the the received data from the client inside our terminal just by printing it.
 //* because of this we can now dynamically receive the data from the client side and use that data to create a instance of User model and save the new user to database.
+
+//* Code
+/*
+//* creating our server using express
+const express = require("express"); //* this require("express") returns a function.
+//* requiring  database.js file
+const connectDb = require("./config/database");
+//* now we can call this express function and it will create a express js application
+const app = express(); //* this function call returns the express js application, so here we are creating the instance of the express js application.
+//* basically we are creating a web server using express js .
+
+//* importing the User model
+const User = require("./models/user");
+
+//!middleware to convert received json to js object and again put that inside req.body.
+app.use(express.json());
+
+app.post("/signup", async (req, res) => {
+  //! accessing the request
+  console.log(req.body);
+  //!creating instance from User model using dynamic data coming from client side
+  const user = new User(req.body);
+
+  try {
+    //! saving the user instance inside the database using .save() method
+    await user.save();
+    //! sending response to the client
+    res.send("User added successfully");
+  } catch (err) {
+    //! catching errors and sending error message
+    res.send(400).send(`Error saving the user:-${err.message}`);
+  } 
+});
+
+connectDb()
+  .then(() => {
+    console.log("successfully connected to the database cluster");
+    app.listen(3000, () => {
+      console.log("server is listening successfully on port 3000");
+    });
+  })
+  .catch((err) => {
+    console.error("cannot connect to the database");
+  });
+  */
+
+//*
