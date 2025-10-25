@@ -578,7 +578,6 @@ app.post("/signup", async (req, res) => {
 //* because of this we can now dynamically receive the data from the client side and use that data to create a instance of User model and save the new user to database.
 
 //* Code
-/*
 //* creating our server using express
 const express = require("express"); //* this require("express") returns a function.
 //* requiring  database.js file
@@ -590,14 +589,19 @@ const app = express(); //* this function call returns the express js application
 //* importing the User model
 const User = require("./models/user");
 
-//!middleware to convert received json to js object and again put that inside req.body.
+//! importance of express.json() middleware.
+//* so to convert the json to js object , we will use a middleware given to us by express.js. and that's express.json(). this middleware can take the json from the req.body then convert that to js object then again put that inside the req.body and we can then easily access it form the request body.
+//* to use it we can just put it inside app.use(express.json())) , like we cerate middlewares, as we know app.use() work for all methods when we specify any path as first arg, but if we don't even specify any path then it will work for all requests with any path . so that's why we are using it without any path so it can work for any api. like this :- app.use(express.json()))
+//* we need to put this above other apis so what ever request comes with json data get converts to the js object and we can easily access the data inside the request handlers req.body.
 app.use(express.json());
 
+//* now we can create our apis to add a user into our database
+//* now inside our app.js , we will create a api to create a user into our database, so we already know that if we want to create a user then post method is best for that because we want to create some new data/document inside the database.
 app.post("/signup", async (req, res) => {
   //! accessing the request
   console.log(req.body);
   //!creating instance from User model using dynamic data coming from client side
-  const user = new User(req.body);
+  const user = new User(req.body); //* present in mongoose doc ,go to model => Model()
 
   try {
     //! saving the user instance inside the database using .save() method
@@ -607,7 +611,111 @@ app.post("/signup", async (req, res) => {
   } catch (err) {
     //! catching errors and sending error message
     res.send(400).send(`Error saving the user:-${err.message}`);
-  } 
+  } //* status code 400 represents bad request , and we are using it here because we are sending request to the server to save the user data and if the request fails then we can use to 400 status code as it represents bad request.
+});
+
+//todo:-  now let's make a "/user" api , using which client can search a user using that user's emailId. By passing the user using the request body. As this api is about only getting the user so we will use the app.get method to create this user api
+app.get("/user", async (req, res) => {
+  //* getting the user emailId from the request
+  const userEmail = req.body.emailId; //!while sending the dta from client/postman always send in json format(key and value both inside "":"").
+  console.log(userEmail);
+  //* we will User.find method(see mongoose doc to see find method),available on User model we created, which takes any filters to find a document, here we are using emailId as a filter.
+  try {
+    const users = await User.find({ emailId: userEmail }); //* it will return array of users , matching with our filter. // present in mongoose doc ,go to Model.find()
+    //* if the returned array does not include any result, then we can send response user not found
+
+    if (users.length === 0) {
+      res.status(404).send("User not found");
+    } else {
+      //* sending back user to client when user is found
+      res.send(users);
+    }
+  } catch (err) {
+    //* this catch block will be only executed only if something get ]s wrong with above code, status 400 code used for bad request , when something is qrong with our code.
+    res.status(400).send("something went wrong");
+  }
+});
+
+//todo :- this time we will make a api which will find only user matching with the filter we pass, so it will not return an array of objects instead it will just return one object. so the data base can contain multiple users matching the same filter , but this return just one user, we will use User.findOne({"email":"userEmail"}) method to find one user.
+//! ideally our database should not contain two users with same emailID but till now we have to set any rules like that , so in future lessons we will learn how to do that , so every user has a unique emailId.
+app.get("/oneuser", async (req, res) => {
+  //* getting the user email from the request body
+  const userEmail = req.body.emailId;
+  console.log(userEmail);
+  //* finding the user from the database
+  try {
+    const user = await User.findOne({ emailId: userEmail }); //* present in mongoose doc ,go to model.findOne()
+    if (!user) {
+      res.status(404).send("user not found");
+    } else {
+      res.send(user);
+    }
+  } catch (err) {
+    res.status(400).send("Something went wrong:" + err.message);
+  }
+});
+
+//todo:- lets build a feed api which will give us all the users present in our database. we will again use the User.find({}) method with empty filter , so we can get all the users. when we open tinder we see many users data on the feed page , so this api is very similar , that's why we named it feed api.it will give us all the users data from the database.
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({}); //* using User.find({}) with empty filter to find all the users. //* present in mongoose doc ,go to model.findOne()
+
+    if (users.length === 0) {
+      res.status(404).send("no users found");
+    } else {
+      res.send(users);
+    }
+  } catch (err) {
+    res.status(400).send("Something went wrong:" + err.message);
+  }
+});
+
+//todo :- let's create a delete /user api to delete a user using id .we will get the id from client using req body.we will use Model.findByIdAndDelete(id)(present in mongoose doc).
+app.delete("/user", async (req, res) => {
+  //* getting the userId from the request body
+  const userId = req.body.userId;
+  console.log(userId);
+
+  try {
+    const user = await User.findByIdAndDelete(userId); //* findByIdAndDelete(id) is a shorthand for findOneAndDelete({ _id: id }). so if we write only the id as argument it will work fine. so findByIdAndDelete(id) or findByIdAndDelete(_id:id) both are correct and both will work.//* present in mongoose doc ,go to model.findByIdAndDelete()
+    res.send("user is deleted");
+  } catch (err) {
+    res.status(400).send("something went wrong" + err.message);
+  }
+});
+
+//todo: let's make a /user api which will update a portion of an user's data using their userId. as we are not updating the while user instead just updating just a portion so we will use app.patch() not app.put(). ans as we are trying to update the data using the id we will use Model.findByIdAndUpdate(id,{update},{options(optional)}).
+app.patch("/user", async (req, res) => {
+  const data = req.body;
+  const userid = req.body.userId;
+
+  try {
+    const user = await User.findByIdAndUpdate(userid, data, {
+      returnDocument: "after",
+    }); //* first param is the id we received from request, we can also write it as {_id:userId} or just userID as its shorthand, the second param is the the updated object , we have also received it from the request, it contains the field with updated data which the user want to update in our database.the third param is options, it is optional to mention, so in the mongoose docs Model.findByIdAndUpdate() we can see many options available in the doc, there is a option returnDocument , by default it is set to before which means it returns it will return the document(user) before update. but if we change it to after then it will return the document after update.
+    console.log(user);
+    res.send("user updated successfully");
+  } catch (err) {
+    res.status(400).send("Something went wrong" + err.message);
+  }
+});
+
+//! while testing below patch method comment the above path method as both has same url and same http method.
+//todo: let's make a /user api which will update a portion of an user's data using their emailId. as we are not updating the while user instead just updating just a portion so we will use app.patch() not app.put(). ans as we are trying to update the data using the emailId we will use Model.findOneAndUpdate(id,{update},{options(optional)}).
+//! Model.findOneAndUpdate() and Model.findByIdAndUpdate() are very similar . but for Model.findOneAndUpdate() we can find the user using any field like email or age , name , but for Model.findByIdAndUpdate() we can only use id . behind the scenes Model.findByIdAndUpdate() uses Model.findOneAndUpdate(). So both are equivalent.See the doc mongoose , Model.findOneAndUpdate()
+app.patch("/user", async (req, res) => {
+  const data = req.body;
+  const userEmail = req.body.emailId;
+  console.log(data);
+  try {
+    const user = await User.findOneAndUpdate({ emailId: userEmail }, data, {
+      returnDocument: "after",
+    }); //* first param is the id we received from request, we can also write it as {_id:userId} or just userID as its shorthand, the second param is the the updated object , we have also received it from the request, it contains the field with updated data which the user want to update in our database.the third param is options, it is optional to mention, so in the mongoose docs Model.findByIdAndUpdate() we can see many options available in the doc, there is a option returnDocument , by default it is set to before which means it returns it will return the document(user) before update. but if we change it to after then it will return the document after update.
+    console.log(user);
+    res.send("user updated successfully");
+  } catch (err) {
+    res.status(400).send("Something went wrong" + err.message);
+  }
 });
 
 connectDb()
@@ -615,12 +723,8 @@ connectDb()
     console.log("successfully connected to the database cluster");
     app.listen(3000, () => {
       console.log("server is listening successfully on port 3000");
-    });
+    }); //* using the listen method we listening to the incoming requests on port number 3000, the first parameter of this listen method is the port number , now there is second parameter which is a callback function, and this will be called when our server is up and running.
   })
   .catch((err) => {
     console.error("cannot connect to the database");
   });
-  */
-
-//todo:-  now let's make a "/user" api , using which client can search a user using that user's emailId. By passing the user using the request body. As this api is about only getting the user so we will use the app.get method to create this user api
-//*
