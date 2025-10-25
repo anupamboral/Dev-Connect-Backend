@@ -34,6 +34,61 @@ app.post("/signup", async (req, res) => {
   } //* status code 400 represents bad request , and we are using it here because we are sending request to the server to save the user data and if the request fails then we can use to 400 status code as it represents bad request.
 });
 
+//todo:-  now let's make a "/user" api , using which client can search a user using that user's emailId. By passing the user using the request body. As this api is about only getting the user so we will use the app.get method to create this user api
+app.get("/user", async (req, res) => {
+  //* getting the user emailId from the request
+  const userEmail = req.body.emailId; //!while sending the dta from client/postman always send in json format(key and value both inside "":"").
+  console.log(userEmail);
+  //* we will User.find method(see mongoose doc to see find method),available on User model we created, which takes any filters to find a document, here we are using emailId as a filter.
+  try {
+    const users = await User.find({ emailId: userEmail }); //* it will return array of users , matching with our filter.
+    //* if the returned array does not include any result, then we can send response user not found
+
+    if (users.length === 0) {
+      res.status(404).send("User not found");
+    } else {
+      //* sending back user to client when user is found
+      res.send(users);
+    }
+  } catch (err) {
+    //* this catch block will be only executed only if something get ]s wrong with above code, status 400 code used for bad request , when something is qrong with our code.
+    res.status(400).send("something went wrong");
+  }
+});
+
+//todo :- this time we will make a api which will find only user matching with the filter we pass, so it will not return an array of objects instead it will just return one object. so the data base can contain multiple users matching the same filter , but this return just one user, we will use User.findOne({"email":"userEmail"}) method to find one user.
+app.get("/oneuser", async (req, res) => {
+  //* getting the user email from the request body
+  const userEmail = req.body.emailId;
+  console.log(userEmail);
+  //* finding the user from the database
+  try {
+    const user = await User.findOne({ emailId: userEmail });
+    if (!user) {
+      res.status(404).send("user not found");
+    } else {
+      res.send(user);
+    }
+  } catch (err) {
+    res.status(400).send("Something went wrong:" + err.message);
+  }
+});
+
+//todo:- lets build a feed api which will give us all the users present in our database. we will again use the User.find({}) method with empty filter , so we can get all the users. when we open tinder we see many users data on the feed page , so this api is very similar , that's why we named it feed api.it will give us all the users data from the database.
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({}); //* using User.find({}) with empty filter to find all the users.
+
+    if (users.length === 0) {
+      res.status(404).send("no users found");
+    } else {
+      res.send(users);
+    }
+  } catch (err) {
+    res.status(400).send("Something went wrong:" + err.message);
+  }
+});
+
 connectDb()
   .then(() => {
     console.log("successfully connected to the database cluster");

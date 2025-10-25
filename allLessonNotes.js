@@ -622,4 +622,5 @@ connectDb()
   });
   */
 
+//todo:-  now let's make a "/user" api , using which client can search a user using that user's emailId. By passing the user using the request body. As this api is about only getting the user so we will use the app.get method to create this user api
 //*
