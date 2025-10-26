@@ -578,6 +578,7 @@ app.post("/signup", async (req, res) => {
 //* because of this we can now dynamically receive the data from the client side and use that data to create a instance of User model and save the new user to database.
 
 //* Code
+/*
 //* creating our server using express
 const express = require("express"); //* this require("express") returns a function.
 //* requiring  database.js file
@@ -727,4 +728,161 @@ connectDb()
   })
   .catch((err) => {
     console.error("cannot connect to the database");
-  });
+  });*/
+
+//! Season 2 - Episode - 08 - Data Sanitization & Schema validation
+
+//* in this lesson we will learn about data sanitization,so right now anyone can upload trash data to our database using our apis, like wrong fake names, or gender that don't even exist or wrong email or capitalized email, wrong age ,etc. So before uploading the data to the database we should perform some validations on the data before saving into database, this process of sanitizing the data is called data sanitization.
+
+//* so we will perform strict checks before saving the data into database, if checks are not passed we will not insert data into our database.
+//* So first of all we will add validation checks inside the schema we have created, so our user schema.
+
+//* To find , how we can add validations to our schema, let's open mongoose documentation, and go to schemaTypes and scroll to all schema Types
+//* so we can see under this heading that which flags , basically schema types we can add to a field.
+//! required flag
+//* like some fields should be mandatory , to sign up a user , like firstNAme, email , password.
+//* So inside these fields we can add a required flag, its values will be a boolean or a function which returns a boolean. So if we add this flag to a field then it becomes mandatory to add this field data while signing up the user , basically when the user is first time registering him/her using our post /signup api.
+//* So let's so to oue User Schema present inside models folder user.js file, and for firstName , email, password add this required flag.
+//* like this
+/*
+ * firstName: {
+ *  type: String,
+ *  required: true,
+ * },
+ */
+//* after adding this required flag and setting value to true, the user has to provide a firstName while signing up , otherwise mongoose will not allow insertion of document into the collection in database.
+//* we have added this flag for email, firstName and password.
+//* So if we try to insert a user without emailId then it will through am error :- User validation failed: emailId: Path `emailId` is required.
+
+//! unique flag
+//* another check is two users should not have same email id. So every users need to have a unique email id. and to add this validation we can add another flag named "unique". And its value can be a boolean value.see the same schema Types page in the mongoose doc, and go to indexes. present below all schema types. If we add this unique flag to a field and set its value to true . then two users can't insert same email ids. so let's add this flag to email field in our schema.
+//* see doc here :-https://mongoosejs.com/docs/schematypes.html#indexes
+//* like this:-
+/*
+ *  emailId: {
+ *    type: String,
+ *    required: true,
+ *    unique: true,
+ *  }
+ */
+
+//* if we try to insert a user using a already inserted email id then it will through an error,like :- E11000 duplicate key error collection: devConnect.users index: emailId_1 dup key: { emailId: "kirta@loh.com" }
+
+//*
+//!default flag
+//* first we will add some more fields to save more data about the user like photoUrl,about, skills.and a user can have multiple skills , so the type of the skills field will be array of strings, the we can write skills like:-
+/*
+ * skills: {
+ *   type:[String]
+ * }
+ */
+//* to provide a default value of any field we can use a default flag, its value can be Any type or function,it sets a default value for the path/field. If the value is a function, the return value of the function is used as the default.see doc here:- https://mongoosejs.com/docs/schematypes.html#all-schema-types.
+//* we can use this flag like this:-
+/*
+ *  about: {
+ *    type: String,
+ *    default: "This is the default about of the user",
+ *  },
+ */
+//* now if we add a user with adding any about field then this about default will be automatically added.
+
+//* now if we add a user without any about still it will add the about field by default.like this
+/*
+{
+*  "_id": {
+*    "$oid": "68fdbe05b84fc0a869a6fc0e"
+*  },
+*  "firstName": "alia",
+*  "lastName": "bhat",
+*  "emailId": "alia@bhat.com",
+*  "password": "alia@123",
+*  "about": "This is the default about of the user",
+*  "skills": [],
+*  "__v": 0
+}*/
+//* and also we can see that it added the skills, but we did not add any skills, but mongoose added this field, because it is a default behavior , so when ever we set a fields type to array, then by default when we create a document it creates that field by default with empty array, so it is not created by mistake.That's why it skills field was added with empty array,to keep empty space for its values.
+//* let's add also a default image for the photoUrl
+
+//!lowercase flag
+//* suppose the user enters the email like this - YAShdas@gmail.com but we want all our email ids in lowercase format so to do that we can mention a lowerCase flag. its value can be a boolean value . see the doc here-https://mongoosejs.com/docs/schematypes.html#string-validators.
+//* we can use this in the schema of email field like this and whatever email user upload will be converted to lowercase.
+/*
+ * emailId: {
+    type: String,
+    required: true,
+    unique: true,
+ *   lowerCase:true
+  },
+  */
+
+//! trim flag
+//* suppose as user uploads a email with spaces like "     alia@bhat.com   " then if this email already exist still mongoose will treat as different email as this so much spaces, and if this email did not existed and the user is uploading it first time then it wi;ll be saved with this much spaces. So to avoid this problem we can add trim flag in our email field schema, so even the user uploads any email with spaces it will trim the spaces automatically.its value can be boolean. we can see the doc - https://mongoosejs.com/docs/schematypes.html#string-validators
+//* we use it like this :-
+/*
+  *emailId: {
+    type: String,
+    required: true,
+    unique: true,
+    lowerCase: true,
+   * trim:true,
+  },
+  */
+
+//! minLength and maxLength flag
+//* we can add these flags for strings to add a minimum and maximum length.these flags can have a number as value.
+//*like this:-
+/* 
+  firstName: {
+    type: String,
+    required: true,
+  *  minLength: 3,
+  * maxLength:50
+  },
+  */
+//! min and max flag
+//* we can add these flags for Numbers to add a minimum and maximum value.these flags can have a number as value.we can use it like this:-
+/*
+  age: {
+    type: Number,
+   * min: 12,
+   * max: 100
+  },
+  */
+
+//! adding a custom validation function
+//* suppose we want that the user's gender should be only male, female,others.so we can make a custom validator function for that.
+//* see doc here - https://mongoosejs.com/docs/schematypes.html#all-schema-types
+/*
+  gender: {
+    type: String,
+*    lowerCase:true,//* this flag is important because if the user uses uppercase then our validation will mot work so using this flag is important
+*    validate(value) {
+        //* if the belows arrays values does not include user's inserted value then throw an error
+ *     if (!["male", "female", "others"].includes(value))
+ *       throw new Error("gender data is not valid")
+    }
+  },
+  */
+//! runValidators option
+//* but even we add this validation, this validation check will be only performed when the user is first time creating his profile, basically first time uploading his data, but if the profile is already existing and he tries to update it then this validation will not work, because by default validation checks are turns off while we update through put or patch methods.
+//* if we want to perform validation checks while updating then we have to manually turn on them
+//* so to turn validation for updates, we need to got to app.js , and go to app.patch functions or put functions , inside the api we have used either findByIdAndUpdate() or findOneAndUpdate() methods on the model, in this methods as third parameters we can pass different kind of options , so to run validation while updating here in the options we have to mention one option "runValidators".it can have a boolean value. So if we set its value to true the the validations will be alo performed whenever we update.See here in docs :- https://mongoosejs.com/docs/api/model.html#Model.findOneAndUpdate()
+
+//* we can use it like this
+/*
+ const user = await User.findOneAndUpdate({ emailId: userEmail }, data, {
+      returnDocument: "after",
+    * runValidators: true,
+    });
+    */
+
+//! TimeStamps
+//* if we want to add time stamps automatically added for every document, to know when the document was created and when the document was last updated then we can add a timeStamps property with true value  inside a object in to the new Schema function as second parameter, and it will automatically add time stamps.See doc here:- https://mongoosejs.com/docs/timestamps.html#timestamps
+//* we can use it like this:-
+// *const userSchema = new Schema({ name: String }, { timestamps: true });//* in the first param inside object we define field types , and as second param inside a object we  can defined this timeStamp:true to automatically add time stamps.
+//* we could also add a new field to manually save the data like:-
+/*
+createdAt:{
+type:Date
+}*/
+//* but there is no need to do it manually as we can use timeStamps which will automatically handle it.

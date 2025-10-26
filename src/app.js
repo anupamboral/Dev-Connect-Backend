@@ -30,7 +30,7 @@ app.post("/signup", async (req, res) => {
     res.send("User added successfully");
   } catch (err) {
     //! catching errors and sending error message
-    res.send(400).send(`Error saving the user:-${err.message}`);
+    res.status(400).send(`Error saving the user:-${err.message}`);
   } //* status code 400 represents bad request , and we are using it here because we are sending request to the server to save the user data and if the request fails then we can use to 400 status code as it represents bad request.
 });
 
@@ -105,6 +105,7 @@ app.delete("/user", async (req, res) => {
 });
 
 //todo: let's make a /user api which will update a portion of an user's data using their userId. as we are not updating the while user instead just updating just a portion so we will use app.patch() not app.put(). ans as we are trying to update the data using the id we will use Model.findByIdAndUpdate(id,{update},{options(optional)}).
+/*
 app.patch("/user", async (req, res) => {
   const data = req.body;
   const userid = req.body.userId;
@@ -112,6 +113,7 @@ app.patch("/user", async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(userid, data, {
       returnDocument: "after",
+      runValidators: true,
     }); //* first param is the id we received from request, we can also write it as {_id:userId} or just userID as its shorthand, the second param is the the updated object , we have also received it from the request, it contains the field with updated data which the user want to update in our database.the third param is options, it is optional to mention, so in the mongoose docs Model.findByIdAndUpdate() we can see many options available in the doc, there is a option returnDocument , by default it is set to before which means it returns it will return the document(user) before update. but if we change it to after then it will return the document after update.
     console.log(user);
     res.send("user updated successfully");
@@ -119,7 +121,7 @@ app.patch("/user", async (req, res) => {
     res.status(400).send("Something went wrong" + err.message);
   }
 });
-
+*/
 //! while testing below patch method comment the above path method as both has same url and same http method.
 //todo: let's make a /user api which will update a portion of an user's data using their emailId. as we are not updating the while user instead just updating just a portion so we will use app.patch() not app.put(). ans as we are trying to update the data using the emailId we will use Model.findOneAndUpdate(id,{update},{options(optional)}).
 //! Model.findOneAndUpdate() and Model.findByIdAndUpdate() are very similar . but for Model.findOneAndUpdate() we can find the user using any field like email or age , name , but for Model.findByIdAndUpdate() we can only use id . behind the scenes Model.findByIdAndUpdate() uses Model.findOneAndUpdate(). So both are equivalent.See the doc mongoose , Model.findOneAndUpdate()
@@ -130,6 +132,7 @@ app.patch("/user", async (req, res) => {
   try {
     const user = await User.findOneAndUpdate({ emailId: userEmail }, data, {
       returnDocument: "after",
+      runValidators: true,
     }); //* first param is the id we received from request, we can also write it as {_id:userId} or just userID as its shorthand, the second param is the the updated object , we have also received it from the request, it contains the field with updated data which the user want to update in our database.the third param is options, it is optional to mention, so in the mongoose docs Model.findByIdAndUpdate() we can see many options available in the doc, there is a option returnDocument , by default it is set to before which means it returns it will return the document(user) before update. but if we change it to after then it will return the document after update.
     console.log(user);
     res.send("user updated successfully");
