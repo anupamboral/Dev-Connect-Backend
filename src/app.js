@@ -105,12 +105,31 @@ app.delete("/user", async (req, res) => {
 });
 
 //todo: let's make a /user api which will update a portion of an user's data using their userId. as we are not updating the while user instead just updating just a portion so we will use app.patch() not app.put(). ans as we are trying to update the data using the id we will use Model.findByIdAndUpdate(id,{update},{options(optional)}).
-/*
-app.patch("/user", async (req, res) => {
+
+app.patch("/user/:userId", async (req, res) => {
   const data = req.body;
-  const userid = req.body.userId;
+  const userid = req.params.userId;
 
   try {
+    //* implementing api level sanitization so the user can't their email or name.
+    const ALLOWED_UPDATABLE_FIELDS = [
+      "about",
+      "photoUrl",
+      "gender",
+      "age",
+      "skills",
+    ];
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      ALLOWED_UPDATABLE_FIELDS.includes(k)
+    ); //* it will return true if user the user only want update from the ALLOWED_UPDATABLE_FIELDS, if the user try to update any other field then we will through an error , which will execute the catch block.
+    if (!isUpdateAllowed) {
+      throw new Error("updating email or name is not allowed.");
+    }
+    //! the user can upload 1 million skills and that can crash our database , so with below condition we have restricted the skills to 10.
+    if (data.skills && data?.skills.length > 10) {
+      //* if the user sent skills data and it is more than 10 only then it will be executed, suppose the user does not sent the skills field data for updating then because od of first condition check this if block will not be executed because data.skills value will be false so this will not execute.
+      throw new Error("You can upload maximum 10 skills");
+    }
     const user = await User.findByIdAndUpdate(userid, data, {
       returnDocument: "after",
       runValidators: true,
@@ -121,10 +140,11 @@ app.patch("/user", async (req, res) => {
     res.status(400).send("Something went wrong" + err.message);
   }
 });
-*/
+
 //! while testing below patch method comment the above path method as both has same url and same http method.
 //todo: let's make a /user api which will update a portion of an user's data using their emailId. as we are not updating the while user instead just updating just a portion so we will use app.patch() not app.put(). ans as we are trying to update the data using the emailId we will use Model.findOneAndUpdate(id,{update},{options(optional)}).
 //! Model.findOneAndUpdate() and Model.findByIdAndUpdate() are very similar . but for Model.findOneAndUpdate() we can find the user using any field like email or age , name , but for Model.findByIdAndUpdate() we can only use id . behind the scenes Model.findByIdAndUpdate() uses Model.findOneAndUpdate(). So both are equivalent.See the doc mongoose , Model.findOneAndUpdate()
+/*
 app.patch("/user", async (req, res) => {
   const data = req.body;
   const userEmail = req.body.emailId;
@@ -139,7 +159,7 @@ app.patch("/user", async (req, res) => {
   } catch (err) {
     res.status(400).send("Something went wrong" + err.message);
   }
-});
+});*/
 
 connectDb()
   .then(() => {

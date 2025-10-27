@@ -732,6 +732,7 @@ connectDb()
 
 //! Season 2 - Episode - 08 - Data Sanitization & Schema validation
 
+//* Sanitization at data base level
 //* in this lesson we will learn about data sanitization,so right now anyone can upload trash data to our database using our apis, like wrong fake names, or gender that don't even exist or wrong email or capitalized email, wrong age ,etc. So before uploading the data to the database we should perform some validations on the data before saving into database, this process of sanitizing the data is called data sanitization.
 
 //* so we will perform strict checks before saving the data into database, if checks are not passed we will not insert data into our database.
@@ -886,3 +887,33 @@ createdAt:{
 type:Date
 }*/
 //* but there is no need to do it manually as we can use timeStamps which will automatically handle it.
+//* Turning on this timestamps can help us so much, when we will need to filter some user who registered with in a particular time frame , then this timestamps will help us.
+
+//* till now we were doing data sanitization at database level.Now we will learn how we can do data sanitization at api level.
+
+//* So once the user registered their email, in future if they update their email or name, we can't identify the user, so ideally we don;'t want our user to change their email, name, or id other thing they can change like about or skills. so lets implement this api level sanitization , so once the user register they can't change their email or name.
+//* we use the patch api which uses the id of the user to identify and update the user, but till now we were receiving the id through the request body, but we also want that the user can't even change the id , so inside the api we will receive the id from the url , so we will make the url dynamic to get the id through it. like this "/user/:userId" and then receive the userId using req.params , like this:-
+//*  const userid = req.params.userId;
+
+//* inside the try block of the patch user api we have implemented this like below:-
+
+//* implementing api level sanitization so the user can't their email or name.
+const ALLOWED_UPDATABLE_FIELDS = [
+  "about",
+  "photoUrl",
+  "gender",
+  "age",
+  "skills",
+];
+const isUpdateAllowed = Object.keys(data).every((k) =>
+  ALLOWED_UPDATABLE_FIELDS.includes(k)
+); //* it will return true if user the user only want update from the ALLOWED_UPDATABLE_FIELDS, if the user try to update any other field then we will through an error , which will execute the catch block.
+if (!isUpdateAllowed) {
+  throw new Error("updating email or name is not allowed.");
+}
+
+//! the user can upload 1 million skills and that can crash our database , so with below condition we have restricted the skills to 10.
+if (data.skills && data?.skills.length > 10) {
+  //* if the user sent skills data and it is more than 10 only then it will be executed, suppose the user does not sent the skills field data for updating then because od of first condition check this if block will not be executed because data.skills value will be false so this will not execute.
+  throw new Error("You can upload maximum 10 skills");
+}
