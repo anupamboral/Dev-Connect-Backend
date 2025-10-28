@@ -19,11 +19,18 @@ app.use(express.json());
 //* now inside our app.js , we will create a api to create a user into our database, so we already know that if we want to create a user then post method is best for that because we want to create some new data/document inside the database.
 app.post("/signup", async (req, res) => {
   //! accessing the request
+  const data = req.body;
   console.log(req.body);
   //!creating instance from User model using dynamic data coming from client side
-  const user = new User(req.body); //* present in mongoose doc ,go to model => Model()
+  const user = new User(data); //* present in mongoose doc ,go to model => Model()
 
   try {
+    //*api validation/sanitization for uploading skills
+    //! the user can upload 1 million skills and that can crash our database , so with below condition we have restricted the skills to 10.
+    if (data.skills && data?.skills.length > 10) {
+      //* if the user sent skills data and it is more than 10 only then it will be executed, suppose the user does not sent the skills field data for updating then because od of first condition check this if block will not be executed because data.skills value will be false so this will not execute.
+      throw new Error("You can upload maximum 10 skills");
+    }
     //! saving the user instance inside the database using .save() method
     await user.save();
     //! sending response to the client
@@ -169,5 +176,5 @@ connectDb()
     }); //* using the listen method we listening to the incoming requests on port number 3000, the first parameter of this listen method is the port number , now there is second parameter which is a callback function, and this will be called when our server is up and running.
   })
   .catch((err) => {
-    console.error("cannot connect to the database");
+    console.error("cannot connect to the database:-" + err.message);
   });

@@ -1,6 +1,6 @@
 //* here we have to require mongoose
 const mongoose = require("mongoose");
-
+const validator = require("validator");
 //* to create  schema we have to call a method on mongoose named mongoose.Schema({}), inside that we can write a object where we can write the schema for our users, for each field we have to define the type of the value of each field/ property inside a object.
 const userSchema = new mongoose.Schema(
   {
@@ -19,10 +19,22 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowerCase: true,
       trim: true,
+      validate(userEmail) {
+        if (!validator.isEmail(userEmail)) {
+          throw new Error("Invalid email:-" + userEmail);
+        }
+      },
     },
     password: {
       type: String,
       required: true,
+      validate(password) {
+        if (!validator.isStrongPassword(password)) {
+          throw new Error(
+            "password must contain  8 characters, at least 1 Lowercase, 1 Uppercase,1 Numbers, 1 Symbol"
+          );
+        }
+      },
     },
     age: {
       type: Number,
@@ -41,6 +53,11 @@ const userSchema = new mongoose.Schema(
     photoUrl: {
       type: String,
       default: "https://geographyandyou.com/images/user-profile.png",
+      validate(photoUrl) {
+        if (!validator.isURL(photoUrl)) {
+          throw new Error("Invalid url:-" + photoUrl);
+        }
+      },
     },
     about: {
       type: String,

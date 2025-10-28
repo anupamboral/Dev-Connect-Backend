@@ -917,3 +917,38 @@ if (data.skills && data?.skills.length > 10) {
   //* if the user sent skills data and it is more than 10 only then it will be executed, suppose the user does not sent the skills field data for updating then because od of first condition check this if block will not be executed because data.skills value will be false so this will not execute.
   throw new Error("You can upload maximum 10 skills");
 }
+//* the same validation for skills we also implemented for post /signup api, because through signup api the user can also upload 1 million skills which we don't want.
+
+//* Email validation (using validator package from npm)
+//* writing a logic to check if the email is correct or not is a hectic thing, we have check if it includes a @ or not, even the extension .com, or any other extension is present or not. So to validate this email and also some other things we can use a library from npm " validate", search it google and find it.
+//* this validate library can help us to validate many things like email, url, mongoId, so many things. and this is a very popular library.
+//* so to install we have to run the command - npm i validator
+//* after installing it, using the methods it provides, we can either implement the email validation at the api level or at database level using the schema.For now, we will implement the validation at the database level using schema.
+//* So let's got the schema present in user.js inside models folder. now, in the email field , first we will write a custom validate function, provided by mongoose, we already learnt that when we had written a custom validate function for gender field, so this time we will write the validate function for email field and as parameter we will mention the email, now inside this validate function we will write the logic of email validation, so first of all we have to require the "validator" we installed few minutes ago from npm at the top portion of user.js.
+//* now inside the validate function we can use the methods available of validator. To verify email we can use validator.isEmail() function. like this:-
+/*
+ *validate(userEmail) {
+ *        if (!validator.isEmail(userEmail)) {
+ *          throw new Error("Invalid email:-" + userEmail);
+ *        }
+ *      },
+ */
+
+//* and we can also validate the photoUrl of the user using validate validator.isURL() method like this :-
+/*
+ *validate(photoUrl) {
+ *        if (!validator.isURL(photoUrl)) {
+ *          throw new Error("Invalid url:-" + photoUrl);
+ *        }
+ *      },
+ */
+//* we can even check if the entered password is strong or not using .isStrongPassword(str [, options]) method. so the user has to enter { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1} , only then it will allow the user to insert the password.let's implement it.Like this:-
+/*
+ * validate(password) {
+ *         if (!validator.isStrongPassword(password)) {
+ *           throw new Error(
+ *             "password must contain  8 characters, at least 1 Lowercase, 1 * Uppercase,1 Numbers, 1 Symbol"
+ *           );
+ *         }
+ *       },
+ */
