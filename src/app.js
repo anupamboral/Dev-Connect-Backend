@@ -9,6 +9,7 @@ const app = express(); //* this function call returns the express js application
 //* importing the User model
 const User = require("./models/user");
 
+const validateSignUpData = require("./utils/validate");
 //! importance of express.json() middleware.
 //* so to convert the json to js object , we will use a middleware given to us by express.js. and that's express.json(). this middleware can take the json from the req.body then convert that to js object then again put that inside the req.body and we can then easily access it form the request body.
 //* to use it we can just put it inside app.use(express.json())) , like we cerate middlewares, as we know app.use() work for all methods when we specify any path as first arg, but if we don't even specify any path then it will work for all requests with any path . so that's why we are using it without any path so it can work for any api. like this :- app.use(express.json()))
@@ -25,6 +26,8 @@ app.post("/signup", async (req, res) => {
   const user = new User(data); //* present in mongoose doc ,go to model => Model()
 
   try {
+    //*validation of data
+    validateSignUpData(req); //* this custom helper function we built to validate the sign up data, as it throw error if any wrong data is entered so it will trigger the catch block.so writing it inside a try block is important.
     //*api validation/sanitization for uploading skills
     //! the user can upload 1 million skills and that can crash our database , so with below condition we have restricted the skills to 10.
     if (data.skills && data?.skills.length > 10) {

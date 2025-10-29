@@ -952,3 +952,27 @@ if (data.skills && data?.skills.length > 10) {
  *         }
  *       },
  */
+
+//! Season 2 - Episode - 09 - Encrypting passwords
+
+//* Till now we were directly saving the user's inserted passwords to the database , but that's not a good way, we should always encrypt our passwords before uploading to the database, and upload it in hash format.
+
+//* so to do it we should start it from the api using which the user register them , so the post /sighup api. in the previous lesson we learnt that we should never trust req.body, because attackers can send any malicious data using our api.So let's go inside the post /signup api then. then first we will validate the data coming through the request. but we will no do it directly inside the signup api, instead we will a separate file validate.js inside this we will write a validateSignUpData function which will take the request and validate it. we will create the validate.js file inside a utils folder . So let's create a utils folder inside the src folder.then create a validate.js folder inside utils folder. then inside it we have to create a validateSignUpDate function like this:-
+/*
+* const validateSignUpDate = (req) => {
+*   const { firstName, lastName, emailId, password } = req.body;
+* 
+*   if (!firstName || !lastName) {
+*     throw new Error("Enter valid first name and last name");
+*   } else if (!validator.isEmail(emailId)) {
+*     throw new Error("Enter valid email address");
+*   } else if (!validator.isStrongPassword(password)) {
+*     throw new Error(
+*       "password must contain  8 characters, at least 1 Lowercase, 1 Uppercase,1 * Numbers, 1 Symbol"
+*     );
+  }
+};
+*/
+//* and then export it.
+
+//* then require it inside the app.js and use it inside the post /signup api's try block block and pass the req as argument.
