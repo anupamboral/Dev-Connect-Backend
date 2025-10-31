@@ -917,7 +917,6 @@ if (data.skills && data?.skills.length > 10) {
   //* if the user sent skills data and it is more than 10 only then it will be executed, suppose the user does not sent the skills field data for updating then because od of first condition check this if block will not be executed because data.skills value will be false so this will not execute.
   throw new Error("You can upload maximum 10 skills");
 }
-//* the same validation for skills we also implemented for post /signup api, because through signup api the user can also upload 1 million skills which we don't want.
 
 //* Email validation (using validator package from npm)
 //* writing a logic to check if the email is correct or not is a hectic thing, we have check if it includes a @ or not, even the extension .com, or any other extension is present or not. So to validate this email and also some other things we can use a library from npm " validate", search it google and find it.
@@ -976,3 +975,11 @@ if (data.skills && data?.skills.length > 10) {
 //* and then export it.
 
 //* then require it inside the app.js and use it inside the post /signup api's try block block and pass the req as argument.
+
+//* so now we will learn how to encrypt our passwords.
+//! Bcrypt library(for encrypting passwords)
+//*this library gives us functions to encrypt/hash passwords and also for validating. we can go to its documentation , search npm bcrypt.
+//* now we will install this library using the command - npm i bcrypt.
+
+//* now we will use a function named bcrypt.hash(password,saltRounds), so the first is the text password we want to encrypt/hsh and the second argument is the number of sal rounds, so here salt is basically a random string like "bfi434@^$$%@hehgfojcod" and hash function takes the text password and with this salt it performs numbers of saltRounds we mention as second argument. so as many round it will perform the hash/encrypted password will become more strong and hard to decrypt.A good number of salt rounds is 10, if we use let's say 100 then it will take a lot of time and if we use 1 salt round, then password will nopt be that  once we encrypt it we can't decrypt it .this function returns a promise so always use await. now we will save this hash inside database not the text password which user entered on the client side.
+//* and we were directly creating a instance using the req.body, but it's a bad way of creating a instance using directly the req.body.we should always destructure the data first from the req.body then pass it.

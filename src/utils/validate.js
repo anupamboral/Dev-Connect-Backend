@@ -14,4 +14,4 @@ const validateSignUpDate = (req) => {
     );
   }
 };
-model.exports = { validateSignUpDate };
+module.exports = validateSignUpDate;
