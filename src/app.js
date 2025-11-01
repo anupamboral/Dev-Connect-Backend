@@ -12,8 +12,8 @@ const User = require("./models/user");
 //* requiring bcrypt library after installing
 const bcrypt = require("bcrypt");
 
-const validateSignUpDate = require("./utils/validate");
-console.log(validateSignUpDate);
+const { validateSignUpData, validateSignInData } = require("./utils/validate");
+
 //! importance of express.json() middleware.
 //* so to convert the json to js object , we will use a middleware given to us by express.js. and that's express.json(). this middleware can take the json from the req.body then convert that to js object then again put that inside the req.body and we can then easily access it form the request body.
 //* to use it we can just put it inside app.use(express.json())) , like we cerate middlewares, as we know app.use() work for all methods when we specify any path as first arg, but if we don't even specify any path then it will work for all requests with any path . so that's why we are using it without any path so it can work for any api. like this :- app.use(express.json()))
@@ -25,7 +25,7 @@ app.use(express.json());
 app.post("/signup", async (req, res) => {
   try {
     //*validation of data
-    validateSignUpDate(req); //* this custom helper function we built to validate the sign up data, as it throw error if any wrong data is entered so it will trigger the catch block.so writing it inside a try block is important.
+    validateSignUpData(req); //* this custom helper function we built to validate the sign up data, as it throw error if any wrong data is entered so it will trigger the catch block.so writing it inside a try block is important.
 
     const { firstName, lastName, emailId, password } = req.body;
 
@@ -176,6 +176,38 @@ app.patch("/user", async (req, res) => {
     res.status(400).send("Something went wrong" + err.message);
   }
 });*/
+
+//! Lets make a sign in api now
+//* this will receive the email and password from the client as request, and then first it will verify if the email exist in our database or not using the findOen method , because the emailId is unique for all users . if the email does not match then we will throw an error.but if the user's email exist iin our database then we will verify the password, so to verify the password we will use a function named bcrypt.compare(userEnteredEmail,hashPasswordFromDatabase), so this function takes the user entered email for sign in as the first param, then as the second param it takes the hash password, so before comparing we have to fetch this hash password from the db. then we can compare the userEmail with the hash password/encrypted password . if it matches then it will return true, and we can send response user logged in successfully , if it fails then it will return false then we can throw error invalid credentials.
+//! important:- when we through error while the user entered email does not match any existing email in our db , we should never through a error message like , "user does not exist in our database", also when the password mismatch with user entered password then also we should not throw error like "password is not matching" , because attackers can send fake emails with passwords, so if we through this kind of error then they can know if there entered email exist in our database or not, so we should never tell them if this email exist in our db or not also same applies for password mismatching, it can make our api more vulnerable, So in both of these cases we should throw error like :- " invalid credentials".It's the best practice.
+app.get("/signin", async (req, res) => {
+  try {
+    //* validating email format
+    validateSignInData(req);
+
+    const { emailId: reqEmail, password: reqPassword } = req.body;
+
+    //* validating email from the database
+    const user = await User.findOne({ emailId: reqEmail });
+    //* when user does not exist in the database
+    if (!user) {
+      throw new Error("Invalid credentials");
+    }
+    //* password checking
+    const hashPassword = user.password; //* hash password fetched from the database
+    console.log(hashPassword);
+    const isValidPassword = await bcrypt.compare(reqPassword, hashPassword); //* if this req password match with the hash password fetched from the dab then this method will return true, if mismatch then it will return false.it returns a promise so always use
+    //* if password mismatch then throwing error
+    console.log(isValidPassword);
+    if (!isValidPassword) {
+      throw new Error("Invalid credentials");
+    }
+    //* if password match
+    res.send("Logged In successfully");
+  } catch (err) {
+    res.status(400).send("Something went wrong:-" + err.message);
+  }
+});
 
 connectDb()
   .then(() => {

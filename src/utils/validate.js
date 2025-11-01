@@ -1,7 +1,7 @@
 const { model } = require("mongoose");
 const validator = require("validator");
 
-const validateSignUpDate = (req) => {
+const validateSignUpData = (req) => {
   const { firstName, lastName, emailId, password } = req.body;
 
   if (!firstName || !lastName) {
@@ -14,4 +14,13 @@ const validateSignUpDate = (req) => {
     );
   }
 };
-module.exports = validateSignUpDate;
+
+const validateSignInData = (req) => {
+  const { emailId } = req.body;
+
+  if (!validator.isEmail(emailId)) {
+    throw new Error("Enter valid email address");
+  }
+};
+
+module.exports = { validateSignUpData, validateSignInData };
