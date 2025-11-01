@@ -1000,4 +1000,4 @@ if (data.skills && data?.skills.length > 10) {
 //* when the user first logs in , before logging in the client does not have the JWT(json web token) , but when the user logs in with correct email and password then the server generates a unique JWT(token), and puts it inside a cookie and sends the cookies containing the JWT to the client(browser), Browser stores this cookie.
 //* Now in future , whenever the browser will call any API to  connect with server, the browser always has to send the cookie with JWT(token) and the server will always validate this JWT(token) first then only it will send response to the user/client.
 //*Sometimes when the server sends the JWT(token) , it sends with expiry date of that token, after the expiry date of that token, if the client makes a api call then server fails to validate the token so it redirects the user to the log in page , o the user can log in and get a new JWT(token). some sites does not set an expiry of the JWT(token) so for those sites the same token can work forever.
-//* see image : -
+//* see image : - src\images\Authentication with JWT.avif
