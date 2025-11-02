@@ -12,6 +12,12 @@ const User = require("./models/user");
 //* requiring bcrypt library after installing
 const bcrypt = require("bcrypt");
 
+//* requiring cookie parser library after installing
+const cookieParser = require("cookie-parser");
+
+//* requiring jsonwebtoken
+const jwt = require("jsonwebtoken");
+
 const { validateSignUpData, validateSignInData } = require("./utils/validate");
 
 //! importance of express.json() middleware.
@@ -19,6 +25,9 @@ const { validateSignUpData, validateSignInData } = require("./utils/validate");
 //* to use it we can just put it inside app.use(express.json())) , like we cerate middlewares, as we know app.use() work for all methods when we specify any path as first arg, but if we don't even specify any path then it will work for all requests with any path . so that's why we are using it without any path so it can work for any api. like this :- app.use(express.json()))
 //* we need to put this above other apis so what ever request comes with json data get converts to the js object and we can easily access the data inside the request handlers req.body.
 app.use(express.json());
+//!Cookie-parser library
+//* this library is recommended by express.And the same develops od express library has built this package for parse cookies, so we can use this as a middleware similar to express.json(). We just have to use it inside app.use(), so what ever http method is called by the client to make api call , i it request includes a cookies, this middleware will be triggered and it's cookie will parsed. So this on middleware will work for all api's to parse cookies. We just have to mention it at the top before all apis, as the code execution happens from top to bottom.First let's install this library using:- npm i cookie-parser
+app.use(cookieParser());
 
 //* now we can create our apis to add a user into our database
 //* now inside our app.js , we will create a api to create a user into our database, so we already know that if we want to create a user then post method is best for that because we want to create some new data/document inside the database.
@@ -195,20 +204,38 @@ app.post("/signin", async (req, res) => {
     }
     //* password checking
     const hashPassword = user.password; //* hash password fetched from the database
-    console.log(hashPassword);
+    // console.log(hashPassword);
     const isValidPassword = await bcrypt.compare(reqPassword, hashPassword); //* if this req password match with the hash password fetched from the dab then this method will return true, if mismatch then it will return false.it returns a promise so always use
-    //* if password mismatch then throwing error
-    console.log(isValidPassword);
-    if (!isValidPassword) {
+
+    // console.log(isValidPassword);
+    //* when password is validated and right , sending successful message to client
+    if (isValidPassword) {
+      //* generating JWT(token)(sending the userId as secret data inside the token)
+      const token = jwt.sign({ _id: user._id }, "dev@666Connect"); //*1st param secret data,2nd param secret password
+      console.log(token);
+      //* sending the cookie
+      res.cookie("token", token); //* sending the cookie to the client ,it's first argument is "name" so here we can write "token" as we are sending the token using the cookie, and as the second argument pass the value of the token, we can also mention a third value which is options, but this third value is optional
+      res.send("Logged In successfully");
+    } else {
+      //* if password mismatch then throwing error
       throw new Error("Invalid credentials");
     }
-    //* if password match
-    res.send("Logged In successfully");
   } catch (err) {
     res.status(400).send("Something went wrong:-" + err.message);
   }
 });
+app.get("/profile", async (req, res) => {
+  const cookies = req.cookies;
+  const { token } = cookies;
+  const tokenData = jwt.verify(token, "dev@666Connect"); //* first param received token , second param secret password
+  console.log(tokenData); //* it will give us a object which will contain the secret data we passes and also a property named "iat":4586769; which jwt added itself for verification.
+  //* We can destructure the object and get the secret data we saved and use that to fetch the user.
+  const { _id } = tokenData;
 
+  const user = await User.findById(_id);
+
+  res.send(user);
+});
 connectDb()
   .then(() => {
     console.log("successfully connected to the database cluster");

@@ -999,5 +999,83 @@ if (data.skills && data?.skills.length > 10) {
 //* Authentication
 //* when the user first logs in , before logging in the client does not have the JWT(json web token) , but when the user logs in with correct email and password then the server generates a unique JWT(token), and puts it inside a cookie and sends the cookies containing the JWT to the client(browser), Browser stores this cookie.
 //* Now in future , whenever the browser will call any API to  connect with server, the browser always has to send the cookie with JWT(token) and the server will always validate this JWT(token) first then only it will send response to the user/client.
-//*Sometimes when the server sends the JWT(token) , it sends with expiry date of that token, after the expiry date of that token, if the client makes a api call then server fails to validate the token so it redirects the user to the log in page , o the user can log in and get a new JWT(token). some sites does not set an expiry of the JWT(token) so for those sites the same token can work forever.
+//*Sometimes when the server sends the JWT(token) , it sends with expiry date of that token, after the expiry date of that token, if the client makes a api call then server fails to validate the token so it redirects the user to the log in page , the user can log in and get a new JWT(token). some sites does not set an expiry of the JWT(token) so for those sites the same token can work forever.
 //* see image : - src\images\Authentication with JWT.avif
+
+//! how to use cookies (sending and getting back cookies)
+//* as we read above , when the user log in , and our server verify , either the email and password is correct not, after validating when it is correct then our server generate a JWT(token) and put it inside a cookie and send it back to the client(browser/postman), then the client stores this token and then whenever it will make any api call to our server (example- to get his profile client calls /profile api) the client also sends the token with the request as a temporary password, and server first verify the token coming with the request and then sends the data and if token does not match then it will redirect the user to the log in page so he logs in gain to get new token.
+//* so first inside the login api when the user is validated/verified, then we have to send the JWT (token ) inside a cookie. So we will learn to generate the token a bit later but first of all we will send the cookie to the client using some fake hand written token , so inside the login api when the user is verified , before sending the successful response , we will call a method res.cookie("name", "value"), to send the cookie to the client when the user is verified, it's first argument is "name" so here we can write "token" as we are sending the token using the cookie, and as the second argument pass the value of the token, we can also mention a third value which is options, but this third value is optional, we can read more about this res.cookie() method in the express doc, open the doc and search in search bar "res.cookie" and there we can read more about all of the options we can use. so let's use this method before sending the response inside the log in api.
+//* like this:-
+/*
+*if (isValidPassword) {
+      //* generating JWT(token)
+//* we have not generate yet so we will use manually types value for the token
+      //* sending the cookie
+  !    res.cookie("token", "h3g4535%^%*&de34r4jj4998");//* sending the cookie to the client ,it's first argument is "name" so here we can write "token" as we are sending the token using the cookie, and as the second argument pass the value of the token, we can also mention a third value which is options, but this third value is optional
+   *   res.send("Logged In successfully");
+    }
+    */
+//* now in the postman whenever we will call the sign in api with correct email password then call the post /signin api , then in the console we will see the signed in successfully message but also something amazing will happen , so in postman below send button, there is cookies button if we click on it then we will see the token we sent through the response using res.cookie() method.
+
+//* we have learnt how to send the cookie to the client.
+
+//* now after user logs in , he will try to call our api , let's say to get his profile he call the get /profile api. So we don not have get /profile right now , so let's first create the get /profile. Because when the user/client/browser/postman call this get /profile api, it will also send back the received token automatically , like a temporary password,as it stored the token after successful log in , now it will send the token automatically when ever it will make any api call to the server, so the server can verify the request.
+//* so let's create the get /profile api.
+//* after creating the api first to access the cookie, we can access all cookies using req.cookies property. so we can store the cookie inside a constant inside the get /profile api.like this :- const cookies = req.cookies; and below it we will print it, then below it we will send some response , unless postman will go into infinite loop if we don't send back any response , so for naw we can send some fake message like reading cookies.
+//* now we call the get /profile api from postman then as we were printing the cookies, so let's go to the terminal of vs code and see if the cookies we received is printed on the terminal or not, surprisingly we will see it has printed undefined. and that's is because express can't parse cookies by itself. Similar to json, remember while building the post /signup api when we sent the json data inside the body, first it could not parse json, because express can't read json directly, that's why it was showing undefined, so we used a middleware express.json() to parse the json. Similarly express can't read cookies directly, so again we have to use a middleware, it is not included inside express so we have to install a library called cookie- parser.
+//!Cookie-parser library
+//* this library is recommended by express.And the same develops od express library has built this package for parse cookies, so we can use this as a middleware similar to express.json(). We just have to use it inside app.use(), so what ever http method is called by the client to make api call , i it request includes a cookies, this middleware will be triggered and it's cookie will parsed. So this on middleware will work for all api's to parse cookies. We just have to mention it at the top before all apis, as the code execution happens from top to bottom.First let's install this library using:- npm i cookie-parser
+//* then we have to require it like :-const cookieParser = require("cookie-parser");
+//* then below express.json middleware , and at the top of all apis we will call this middleware.like:-
+app.use(cookieParser());
+
+//* now if we send req from client/postman using the get /profile api, we see the cookies is printed in the console, so the token postman sent with the request is now successfully printed in the console inside a object , se we can destructure it to get the token.
+
+//! JWT(tokens) (json web tokens)(check their website:- https://www.jwt.io/introduction)
+//*What is JSON Web Token?(just remembering the red lines is enough below)
+//*JSON Web Token (JWT) is an open standard (RFC 7519) that defines a compact and self-contained way for securely transmitting information between parties as a JSON object. This information can be verified and trusted because it is digitally signed. JWTs can be signed using a secret (with the HMAC algorithm) or a public/private key pair using RSA or ECDSA.
+
+//*Although JWTs can be encrypted to also provide secrecy between parties, we will focus on signed tokens. Signed tokens can verify the integrity of the claims contained within it, while encrypted tokens hide those claims from other parties. When tokens are signed using public/private key pairs, the signature also certifies that only the party holding the private key is the one that signed it.
+
+//*When should you use JSON Web Tokens?
+//*Here are some scenarios where JSON Web Tokens are useful:
+
+//*Authorization: This is the most common scenario for using JWT. Once the user is logged in, each subsequent request will include the JWT, allowing the user to access routes, services, and resources that are permitted with that token. Single Sign On is a feature that widely uses JWT nowadays because of its small overhead and its ability to be easily used across different domains.
+//*Information Exchange: JSON Web Tokens are a good way of securely transmitting information between parties. Because JWTs can be signed—for example, using public/private key pairs—you can be sure the senders are who they say they are. Additionally, as the signature is calculated using the header and the payload, you can also verify that the content hasn't been tampered with.
+//*What is the JSON Web Token structure?
+//*In its compact form, JSON Web Tokens consist of three parts separated by dots (.), which are:
+
+//*Header
+//*Payload
+//*Signature
+
+//! so the json web token generates a very unique token, using which we can validate user sessions, and we can also send some secret data inside this token.this token has three parts
+//!1.header:The header typically consists of two parts: the type of the token, which is JWT, and the signing algorithm being used, such as HMAC SHA256 or RSA.example:-{ "alg": "HS256", "typ": "JWT"}
+//!2.Payload:- The second part of the token is the payload, which contains the claims. Claims are statements about an entity (typically, the user) and additional data. There are three types of claims: registered, public, and private claims.This payload can contain some secret data inside it, so using it we can send some secret data using the token.for example the id or   {"sub": "1234567890","name": "John Doe", "admin": true}
+//! 3.Signature:-The signature is used to verify the message wasn't changed along the way, and, in the case of tokens signed with a private key, it can also verify that the sender of the JWT is who it says it is.To create the signature part you have to take the encoded header, the encoded payload, a secret, the algorithm specified in the header, and sign that.
+//*Putting all together
+//*The output is three Base64-URL strings separated by dots that can be easily passed in HTML and HTTP environments, while being more compact when compared to XML-based standards such as SAML.
+//! so the jwt token will be separated with three dots , it looks like-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OTA0ODJlYmViODBmN2FkMTA2ODc3MTAiLCJpYXQiOjE3NjIwNzUzODF9.XtsLK9RcmwXBEPvf17lPHaN5IICB7xz9RPzze5cofKU
+
+//* using it is very easy , but first we have to install this this from npm , we can also search npm jsonwebtoken . So let's install this library using the command - npm i jsonwebtoken
+//* then inside app.js we have require it :- const jwt=require("jsonwebtoken")
+//* we can also read the npm documentation , but like we used bcrypt library , it had hash function to hash and and compare function to validate, similarly it has two important functions , first jwt.sign({data:"any secret data"}, "secret password key"). its first parameter is a object where we can store any secret data we want.using it we will send the user id.And the second param is the secret key or password, we can set , this secret will be only known by me,no user or attackers know this key, so they can't know what we saved inside the token, this secret key is very important, this jwt.sign() function is required for generating the token.
+//* second function is for verifying the token , so when the user will send us request with the token , then we have to verify the token, so to verify the token we will use the function jwt.verify(token, secretPassword), , first param is the received token and second is the secret password we used while generating the token.with this we can't verify, so this is like a password, which only we know. this method does not return a boolean value instead it return the secret data we hidden. So inside it if we have hidden the user id then we can use it fetch the user from the database
+//* So let's go inside our signin api and and generate the token and send it inside the cookies. every time user logs in it generate a different token but it contains the data we sent inside .like this:-
+//*const token = jwt.sign({ _id: user._id }, "dev@666Connect"); //*1st param secret data,2nd param secret password
+//* sending the cookie
+//*res.cookie("token", token);
+
+//* now let's go inside the get /profile api,and verify the token using jwt.verify(), and fetch the user profile using the id we hidden inside the token.like this:-
+//*const cookies = req.cookies;
+//*  const { token } = cookies;
+//!  const tokenData = jwt.verify(token, "dev@666Connect"); //* first param //*received token , second param secret password
+//*  console.log(tokenData); //* it will give us a object which will contain the //*secret data we passes and also a property named "iat":4586769; which jwt added //*itself for verification.
+//*  //* We can destructure the object and get the secret data we saved and use //*that to fetch the user.
+//*  const { _id } = tokenData;
+//*
+//*  const user = await User.findById(_id);
+//*
+//*  res.send(user);
+
+//! so now who ever sign in they can only call our api because they our api will always verify the token , and whoever sign in only his data will be sent to him when we call our api, because when he signed in , our server sent only his userid with token, and using his user id only his data can be fetched not others.
