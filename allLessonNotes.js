@@ -1079,3 +1079,104 @@ app.use(cookieParser());
 //*  res.send(user);
 
 //! so now who ever sign in they can only call our api because they our api will always verify the token , and whoever sign in only his data will be sent to him when we call our api, because when he signed in , our server sent only his userid with token, and using his user id only his data can be fetched not others.
+//* so till now our sign in api and profile api looks like below(for reference):-
+/*
+*app.post("/signin", async (req, res) => {
+  try {
+    //* validating email format
+    validateSignInData(req);
+
+    const { emailId: reqEmail, password: reqPassword } = req.body;
+
+    //* validating email from the database
+    const user = await User.findOne({ emailId: reqEmail });
+    //* when user does not exist in the database
+    if (!user) {
+      throw new Error("Invalid credentials");
+    }
+    //* password checking
+    const hashPassword = user.password; //* hash password fetched from the database
+    // console.log(hashPassword);
+    const isValidPassword = await bcrypt.compare(reqPassword, hashPassword); //* if this req password match with the hash password fetched from the dab then this method will return true, if mismatch then it will return false.it returns a promise so always use
+
+    // console.log(isValidPassword);
+    //* when password is validated and right , sending successful message to client
+    if (isValidPassword) {
+      //* generating JWT(token)(sending the userId as secret data inside the token)
+      const token = jwt.sign({ _id: user._id }, "dev@666Connect"); //*1st param secret data,2nd param secret password
+      console.log(token);
+      //* sending the cookie
+      res.cookie("token", token); //* sending the cookie to the client ,it's first argument is "name" so here we can write "token" as we are sending the token using the cookie, and as the second argument pass the value of the token, we can also mention a third value which is options, but this third value is optional
+      res.send("Logged In successfully");
+    } else {
+      //* if password mismatch then throwing error
+      throw new Error("Invalid credentials");
+    }
+  } catch (err) {
+    res.status(400).send("Something went wrong:-" + err.message);
+  }
+});*/
+/*
+*app.get("/profile", async (req, res) => {
+  const cookies = req.cookies;
+  const { token } = cookies;
+  const tokenData = jwt.verify(token, "dev@666Connect"); //* first param received token , second param secret password
+  console.log(tokenData); //* it will give us a object which will contain the secret data we passes and also a property named "iat":4586769; which jwt added itself for verification.
+  //* We can destructure the object and get the secret data we saved and use that to fetch the user.
+  const { _id } = tokenData;
+
+  const user = await User.findById(_id);
+
+  res.send(user);
+});*/
+
+//* So now our profile api ids secure , as the no one can access it with the toke but our other apis are not secure, because they don't have token verification implemented, that's let's not only keep the token verification logic inside the /profile api only, instead let's build a middleware inside auth.js to perform this token validation.
+//* so we have created the middleware named userAuth, like below:-
+const userAuth = async (req, res, next) => {
+  try {
+    const { token } = req.cookies;
+    if (!token) {
+      throw new Error("Token is not valid!!");
+    }
+    const decodedObj = jwt.verify(token, "dev@666Connect"); //* first param received token , second param secret password
+    const { _id } = decodedObj;
+
+    const user = await User.findById(_id);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+    //* saving the user in the req obj
+    req.user = user;
+    //* if any error happen then immediately catch block will be executed and below next() will not be called so next request handler wil not be executed
+    next(); //*it will move the execution to the next request handler
+  } catch (err) {
+    res.status(400).send("something went wrong:-" + err.message);
+  }
+};
+
+//* first it will check the token is valid or not then it checks if the user exist in our database or not, if token is not valid or user is not present then it will through an error and catch bock will be executed and error response will be sent, but if token and user both is valid then only next() function will be called, so we know if the next() is called then execution will move to next request handler, so our middleware is ready and now we just have to go to our profile api after exporting it, and before the actual request handler which sends the profile data, we have to mention this, and then when ever someone makes call to our profile api then this userAuth will called first , and if it does not through any error then only it will move to the actual request handler.
+//* lets mention this userAuth middleware before the actual request handler like this:-app.get("/profile", userAuth, async (req, res) => {}
+//* another thing is we are already finding the user using the User.findById() method here in the userAuth middleware , then again we are finding the in the request handler as we are already doing it here in the userAuth middleware,so we can just save the user inside the req object here in userAuth like
+//* req.user=user; (inside userAuth)
+//* and then access the req.user in the request handler as the user is already saved inside the req.obj.
+//* So inside the actual request handler function , we don't need to verify the token , no need to fetch the user , as we did all this her in userAuth , so we can remove that code from the request handler. and just get the user from the req.user.like this :-
+//*   const user = req.user;(in profile api's actual request handler)
+
+//* now we will delete the random apis we were using for test :- the get/user, get/feed,delete/user,patch/user/:userId .
+
+//todo lets make a post /sendConnectionRequest api , where we will just have to use this userAuth for authentication and we can also know who is sending the request as we already have the user added inside req.user from userAuth.
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  const user = req.user;
+
+  console.log("sending sonnection request");
+  res.send(user.firstName + " is sending connection request");
+});
+
+//!expiring JWT token
+//* we can even set a expiry time for JWT token, so when were creating the token we could pass a third argument, which is a object inside that object we can mention a property name {expiresIn:"1h"} and set that value as we want , so for now we will set it to 7d which means 7 days.like this-
+/*
+* const token = jwt.sign({ _id: user._id }, "dev@666Connect", {
+  !      expiresIn: "7d",
+*      }); //*1st param secret data,2nd param secret password , 3rd param a object where we can mention the expiry time of the token here we mentioned 7 days
+*/
