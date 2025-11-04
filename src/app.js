@@ -90,7 +90,9 @@ app.post("/signin", async (req, res) => {
       }); //*1st param secret data,2nd param secret password , 3rd param a object where we can mention the expiry time of the token here we mentioned 7 days
       console.log(token);
       //* sending the cookie
-      res.cookie("token", token); //* sending the cookie to the client ,it's first argument is "name" so here we can write "token" as we are sending the token using the cookie, and as the second argument pass the value of the token, we can also mention a third value which is options, but this third value is optional
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 7 * 24 * 3600000 + 3600000 * 5.5),
+      }); //* so cookie will be removed after 7 days}); //* sending the cookie to the client ,it's first argument is "name" so here we can write "token" as we are sending the token using the cookie, and as the second argument pass the value of the token, we can also mention a third value which is options, but this third value is optional
       res.send("Logged In successfully");
     } else {
       //* if password mismatch then throwing error

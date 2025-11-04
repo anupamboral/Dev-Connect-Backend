@@ -1180,3 +1180,11 @@ app.post("/sendConnectionRequest", userAuth, async (req, res) => {
   !      expiresIn: "7d",
 *      }); //*1st param secret data,2nd param secret password , 3rd param a object where we can mention the expiry time of the token here we mentioned 7 days
 */
+//* we can give it any expiry time like 1d or 1m (1 month) , or if we give 0d then it will be expired as soon as we create it, so if you use that token then it will through an error that, token is expired, So generally normal websites keep it it 7 days, but banking websites do not di, they use session cookie(so cookie will be valid only for that session,after exiting browser cookie will be expired) so as soon as user leaves the webpage, they have to log in again, so where we need more security there we can expire the token with in a day , but where it is not important there we can keep 7 days, but we should not keep a token for forever, because if someone logs in from cyber cafe or friends computer,then they will have the token for rest of their life using which they can access his data forever, so after some time we should remove the JWT.
+
+//! expiring cookies(search in express doc search bar - res.cookies)
+//* we can even expire the cookie , very similar to JWT. So when we are sending the cookie using res.cookie, we can mention a third param which is object and we can mention parm inside it like:- {expires: new Date(Date.now() + 8 * 3600000) // so cookie will be removed after 8 hours}
+//* we have use the date format for mention the time, like above.
+//* as the doc say:- Expiry date of the cookie in GMT(greenwich mean time).Indian Standard Time is plus 5.30 hours from the GMT.So to whatever hour we want to add we have to plus 5hours30mins with that time to make working for india. If this parm not specified or set to 0, creates a session cookie.
+//* so to write 7 days we have to write like   expires: new Date(Date.now() + 1 * 24 * 3600000 + 3600000 * 5.5), to add 5hours 30mins to match the indian time.
+//* se we have set it 7days in our cookies.
