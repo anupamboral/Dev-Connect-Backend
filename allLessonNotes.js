@@ -1188,3 +1188,36 @@ app.post("/sendConnectionRequest", userAuth, async (req, res) => {
 //* as the doc say:- Expiry date of the cookie in GMT(greenwich mean time).Indian Standard Time is plus 5.30 hours from the GMT.So to whatever hour we want to add we have to plus 5hours30mins with that time to make working for india. If this parm not specified or set to 0, creates a session cookie.
 //* so to write 7 days we have to write like   expires: new Date(Date.now() + 1 * 24 * 3600000 + 3600000 * 5.5), to add 5hours 30mins to match the indian time.
 //* se we have set it 7days in our cookies.
+
+//! Mongoose schema Methods(!! always declare the methods before the Model creation)
+//* We created the User schema, and we already discussed that it is like a User Class , and we are creating user instances using the User model/class. So like we create methods inside class,then we can access those methods inside the instances of that class,and remember if we use "this" keyword , inside the class or any method we created inside the class, then when we use that method from a instance of that class then this keyword will refer to the instance on which the method is called. Similarly as we created a User Schema which is like a class, we can also create methods inside that User Schema, and when we will call these methods from any instance then the methods will be available, inside the instance and also "This" keyword we used inside the method will refer to the instance. So if the user is Anupam(instance) then this keyword will refer to Anupam(instance).
+//* So the token generation we are doing inside the signin method is very close to the user. So we can create a method in the userSchema , which will do this work and just return the token , and inside the method to get the user we will use "this keyword" and as this method will be called on a instance so it will refer to the that instance only. So whoever is signing in it will generate the token only for that user not for others. So let's add this user schema method on the userSchema. So let's go inside user.js where our schema is present.
+//* remember while writing the method always use normal function not arrow function and as arrow function does not have this keyword. So if we would use arrow function then it will not refer to the user instance,and it will through error, so always use normal function whenever you are using this keyword inside a method of a class.then only it will refer to the instance.like below:-
+/*
+*userSchema.methods.getJWT = function () {
+* const user = this;
+* const token = jwt.sign({ _id: user._id }, "dev@666Connect", {
+*   expiresIn: "7d",
+* }); //*1st param secret data,2nd param secret password , 3rd *aram a object where we can mention the expiry time of the token *ere we mentioned 7 days
+* // console.log(token);
+* return token;
+};
+*/
+//* then we can use this method inside the signin api to get the token once the user in validated, because after the user is validated using the emailId from the database, then the user constant becomes the instance (of that specific user who is signing in).
+
+//* Lets also make a schema method fro validating the password, and as bcrypt.compare() return a promise so we have use async await, while creating the method,we will name this method validatePassword, and when we will use this function inside the signin api then we have to use await, as this is a async function/method.like this:-
+/*
+*userSchema.methods.validatePassword = async function (passwordInputByUser) {
+*  const user = this; //* this is referring to the user instance who is trying to *log in
+*
+*  const hashPassword = user.password;
+*
+*  //* if this user input password match with the hash password fetched from the *db then this method will return true, if mismatch then it will return false.
+*  const isValidPassword = await bcrypt.compare(
+*    passwordInputByUser,
+*    hashPassword
+*  ); //* it will return a promise , which will be boolean value,(true/false)
+*
+*  return isValidPassword;
+};*/
+//*now we can use this inside the signin api.

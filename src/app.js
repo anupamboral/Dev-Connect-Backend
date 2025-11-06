@@ -9,9 +9,6 @@ const app = express(); //* this function call returns the express js application
 //* importing the User model
 const User = require("./models/user");
 
-//* requiring bcrypt library after installing
-const bcrypt = require("bcrypt");
-
 //* requiring cookie parser library after installing
 const cookieParser = require("cookie-parser");
 
@@ -71,24 +68,20 @@ app.post("/signin", async (req, res) => {
     const { emailId: reqEmail, password: reqPassword } = req.body;
 
     //* validating email from the database
-    const user = await User.findOne({ emailId: reqEmail });
+    const user = await User.findOne({ emailId: reqEmail }); //* if the user is valid then this user constant becomes the user instance of that particular user.
     //* when user does not exist in the database
     if (!user) {
       throw new Error("Invalid credentials");
     }
-    //* password checking
-    const hashPassword = user.password; //* hash password fetched from the database
-    // console.log(hashPassword);
-    const isValidPassword = await bcrypt.compare(reqPassword, hashPassword); //* if this req password match with the hash password fetched from the dab then this method will return true, if mismatch then it will return false.it returns a promise so always use
+    console.log(user.getJWT);
+    const isValidPassword = await user.validatePassword(reqPassword);
 
     // console.log(isValidPassword);
     //* when password is validated and right , sending successful message to client
     if (isValidPassword) {
       //* generating JWT(token)(sending the userId as secret data inside the token)
-      const token = jwt.sign({ _id: user._id }, "dev@666Connect", {
-        expiresIn: "7d",
-      }); //*1st param secret data,2nd param secret password , 3rd param a object where we can mention the expiry time of the token here we mentioned 7 days
-      console.log(token);
+      const token = user.getJWT(); //* if above the user exist in the database , it saved the user data into the user constant, so the user is basically a instance of the UserSchema, so we can access the methods available on the user schema,as we shifted the logic of generating the JWT(token) to a userSchema method named getJWT(),it returns the token.
+
       //* sending the cookie
       res.cookie("token", token, {
         expires: new Date(Date.now() + 7 * 24 * 3600000 + 3600000 * 5.5),
