@@ -1221,3 +1221,107 @@ app.post("/sendConnectionRequest", userAuth, async (req, res) => {
 *  return isValidPassword;
 };*/
 //*now we can use this inside the signin api.
+
+//! Season 2 - Episode - 11 - Diving into Apis and express router
+
+//* As we decided previously that we have to make many apis , in this lesson we will create different apis.
+//* So our decided apis are :-
+//* Post /signup
+//* Post /signin
+//* Post /signout
+
+//* Get /profile/view
+//* Patch /profile/edit
+//* Patch /profile/password
+
+//* Post /request/send/interested/:userId
+//* Post /request/send/ignored/:userId
+
+//* Post /request/send/accepted/:userId
+//* Post /request/send/rejected/:userId
+
+//* Get /user/connections
+//* Get /user/requests/received
+//* Get /user/feed - gets you profiles of the other users on platform
+//* Till now we were building all our apis in just one file, in app.js, but it is a bad practice to keep all api's in just one file, instead we will use express.Router() to group apis.
+//* we can go to express doc search express.Router and we can learn about it more.
+//!express.Router([options])
+//* So right now we have 13 apis listed above, so we will group them into small small categories, and create route for each category, and those router will handle those routes,
+
+//* So for api related to authentication we can create a AuthRouter and put auth related apis into that router:-
+//! AuthRouter
+//* Post /signup
+//* Post /signin
+//* Post /signout
+
+//* similarly for profile related apis we can create profileRouter
+//! profileRouter
+//* Get /profile/view
+//* Patch /profile/edit
+//* Patch /profile/password
+
+//* similarly for connectionRequest related apis we can create connectionRequestRouter
+//! connectionRequestRouter
+//* Post /request/send/interested/:userId
+//* Post /request/send/ignored/:userId
+//* Post /request/send/accepted/:userId
+//* Post /request/send/rejected/:userId
+
+//* similarly for user related apis we can create userRouter
+//!userRouter
+//* Get /user/connections
+//* Get /user/requests/received
+//* Get /user/feed - gets you profiles of the other users on platform
+
+//* using this separate routers we are grouping apis into different categories, and this this the bes practice in the industry, because when will we create a big project , even that project has 100 apis , if we use these good practices, then still our code will will be clean and modular.if we would keep all apis one one place still the code will work fine, but that will be very hard to understand for others . We should always follow these good practices while building a project, to make code more clean and modular.
+//* so whenever you are building a big project, before coding list down all you apis , categorize them , then start writing code , your code will be much more cleaner and you don't have to refactor your code again and again.
+//* one more important thing is naming your apis , if you name api's in a good way then just by seeing you can understand what the api is doing like here:- //* Post /request/send/ignored/:userId
+
+//* so let's use express.Router() to destructure our application and we will son understand it's importance.
+//* So first we will create our authRouter where we will be keep our auth related apis.
+//* So inside the src folder first we will create a routes folder.inside it we will create a auth.js file. Then inside the file we will require express, then we will create authRouter like below from express.Router().
+
+const express = require("express");
+
+const authRouter = express.Router();
+
+authRouter.post("/signup", async (req, res) => {
+  try {
+    //*validation of data
+    validateSignUpData(req); //* this custom helper function we built to validate the sign up data, as it throw error if any wrong data is entered so it will trigger the catch block.so writing it inside a try block is important.
+
+    const { firstName, lastName, emailId, password } = req.body;
+
+    //* encrypting/hashing the password
+    const hashPassword = await bcrypt.hash(password, 10); //* 1st arg is text password and 2nd arg is number of salt rounds.it returns a promise.
+    console.log(hashPassword);
+    //!creating instance from User model using dynamic data coming from client side(directly we should not use req.body to create instance instead do like below)
+    const user = new User({
+      firstName: firstName,
+      lastName: lastName,
+      emailId: emailId,
+      password: hashPassword,
+    }); //* present in mongoose doc ,go to model => Model(), we have used hash password which is the encrypted password.
+
+    //! saving the user instance inside the database using .save() method
+    await user.save();
+    //! sending response to the client
+    res.send("User added successfully");
+  } catch (err) {
+    //! catching errors and sending error message
+    res.status(400).send(`Error saving the user:-${err.message}`);
+  } //* status code 400 represents bad request , and we are using it here because we are sending request to the server to save the user data and if the request fails then we can use to 400 status code as it represents bad request.
+});
+
+module.exports = authRouter;
+
+//* first we required express.Then using express.Router() we have created our authRouter, now , like previously we were using app.post() to make the api but now instead of app.post() we have to write authRouter.post() to write the api. So we just cute the signup api we built and paste here and instead of app we have written authRouter.post().And finally we have exported authRouter.
+//* app.post() and authRouter.post() and literally works same , so for the end user their work is same, maybe, behind the scenes the  developers have implemented them differently, but for the end user both work same. But using this router will help us to make our code clean and modular, and destructure our code.
+//* lets also move the /signin api to authRouter from app.js.
+//* now let's also create the profile router inside routes folder , where we can put our profile api , so we have to create profile.js.
+//* and let's also create requests.js file inside routes folder where we will create the connectionRequestsRouter ,and their we can put our connectionRequest api.
+
+//* and don't forget to recheck the import links as we have put , all apis one level deeper inside a routes folder.
+
+//! now our apis will not work because the entrypoint of our server is app.js, so somehow we have to get all routers in our app.js. so let's got to app.js and import all the routers there.
+//! as we will import all these here so we don't need to move the cookie-parser or express.json() middleware to any other file
