@@ -22,5 +22,27 @@ const validateSignInData = (req) => {
     throw new Error("Enter valid email address");
   }
 };
+const validateProfileEditData = (userSentData) => {
+  const allowedFields = [
+    "firstName",
+    "lastName",
+    "emailId",
+    "age",
+    "about",
+    "skills",
+    "photoUrl",
+    "gender",
+  ];
+  console.log(allowedFields);
+  console.log(Object.keys(userSentData.body));
 
-module.exports = { validateSignUpData, validateSignInData };
+  const isAllowed = Object.keys(userSentData.body).every((field) => {
+    allowedFields.includes(field);
+  }); //* it will return a boolean value
+  return !isAllowed; //* boolean value
+};
+module.exports = {
+  validateSignUpData,
+  validateSignInData,
+  validateProfileEditData,
+};

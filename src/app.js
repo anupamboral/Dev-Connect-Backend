@@ -24,8 +24,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 //* using all routers we created
-//* we have mentioned all router using app.use("/") because all request coming from the clients ide will be triggered and we are using app.use() method, and also the with the path "/", which means all requests will trigger below handlers, then it will check all of the routers one by one, and wherever it finds the matching url with path with url , it will start to execute the api code, and send the response, once response is sent it will not go further.
-//* let's say user is making a api call to /profile api then first the express will go to authRouter as we have used app.use("/") then try to find the /profile api, and as it is not present in the authRouter it will go to the next router which is the profileRouter and there it will see the profile api present so it will execute the code of profile api and send the response then close the socket. tha
+//* we have mentioned all router using app.use("/") because all request coming from the clients side/postman will be triggered by the app.use("/") and as we are using app.use() method, and also the with the path "/", which means all requests will trigger below router handlers, then it will check all of the routers one by one, and wherever it finds the matching url with path with url , it will start to execute the api code, and send the response, once response is sent it will not go further.
+//* let's say user is making a api call to /profile api then first the express will go to authRouter as we have used app.use("/") then try to find the /profile api, and as it is not present in the authRouter it will go to the next router which is the profileRouter and there it will see the profile api present so it will execute the code of profile api and send the response then close the socket.
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", connectionRequestRouter);

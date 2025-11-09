@@ -1323,5 +1323,78 @@ module.exports = authRouter;
 
 //* and don't forget to recheck the import links as we have put , all apis one level deeper inside a routes folder.
 
-//! now our apis will not work because the entrypoint of our server is app.js, so somehow we have to get all routers in our app.js. so let's got to app.js and import all the routers there.
-//! as we will import all these here so we don't need to move the cookie-parser or express.json() middleware to any other file
+//!using routers in apps.js
+//! now our apis will not work because the entrypoint of our server is app.js, so somehow we have to get all routers in our app.js. so let's got to app.js and import all the routers in app.js.
+//! as we will import all routers here in app.js so we don't need to move the cookie-parser or express.json() middleware to any other file.
+//* now after importing we will use this routers using app.use() , but always we have to use the routers after the cookie parser and express.json() middleware , if we mention the routers before these middlewares then json will not be converted and cookie will not be parsed so always call the routers after these middlewares because express executes the code from top to bottom, we can import the routers before the middlewares but to use / call the routers , we should always do that after theses app.use(express.json()) and app.use(cookie-parser()) middlewares.
+//* so we can the routers like below using app.use("/",routerName)
+//* using all routers we created
+//* we have mentioned all router using app.use("/") because all request coming from the clients side/postman will be triggered by the app.use("/") and as we are using app.use() method, and also the with the path "/", which means all requests will trigger below router handlers, then it will check all of the routers one by one, and wherever it finds the matching url with path with url , it will start to execute the api code, and send the response, once response is sent it will not go further.
+//* let's say user is making a api call to /profile api then first the express will go to authRouter as we have used app.use("/") then try to find the /profile api, and as it is not present in the authRouter it will go to the next router which is the profileRouter and there it will see the profile api present so it will execute the code of profile api and send the response then close the socket.
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", connectionRequestRouter);
+//* in the previous lesson we discussed that the work of express, is to when a request has come , it will check all request handlers , middlewares , every thing , and send the response from where it finds first.
+
+//!building log/sign out api
+//* So to build this api , we don't need  to perform validations, as this api will just sign out the user, so if the user is logged in or logged out, it does not matter as after calling this api, the user will still not be able to call any important api, as this api will just set the token to null and expire the cookie immediately.In big application, they might perform some clean up activities before expiring the cookie, but in our small application there is no need to do such clean up , so we are just doing the log out process in the standard way which is to setting the token to null and expiring the cookie immediately.So let's build our log out api inside authRouter present in routes/auth.js.like below
+/*
+*authRouter.post("/logout", (req, res) => {
+*  //* setting the token to null and immediately expiring cookies
+*  res.cookie("token", null, { expires: new Date(Date.now()) });
+*
+*  res.send("Logged out successfully");
+});
+*/
+//* it is working totally fine , whenever we log in then our token is valid and we can access the profile api and get the profile data , and then if we call this log out api then token is set to null and cookie expires immediately so then if we call profile api it does not work.
+
+//! PATCH /profile/edit API
+//* so now we will create a PATCH /profile/edit API , it will edit the user data , only not the password. but first of all we need a validation check to check if the user is sending only allowed fields for updating, of if the user sending any extra field like password then we will throw an error, so we will create this validateProfileEditData() inside utils/validate.js file .like below:-
+/*
+*const validateProfileEditData = (userSentData) => {
+*  const allowedFields = [
+*    "firstName",
+*    "lastName",
+*    "age",
+*    "emailId",
+*    "about",
+*    "skills",
+*    "photoUrl",
+*  ];
+*
+*  const isAllowed = Object.keys(userSentData.body).every((field) => {
+*    allowedFields.includes(field);
+*  }); //* it will return a boolean value
+*  return isAllowed; //* boolean value
+};
+*/
+
+//* then we will write the profile edit api inside the profileRouter present in routes/profile.js.like below:-
+/*
+ *profileRouter.post("/profile/edit", userAuth, async (req, res) => {
+ *  try {
+ *    const isValidData = validateProfileEditData(req);
+ *    if (!isValidData) {
+ *      throw new Error("Invalid Input Data");
+ *    }
+ *
+ *    const loggedInUser = req.user; //* we saved the user in userAuth middleware, *while validating the token, so we can access the user from req.user.
+ *    //!So now above logged in user a instance of the User model.
+ *
+ *    //* forEach does not return the array it just change it for every field *according to the logic, map method return noe forEach.
+ *    Object.keys(loggedInUser).forEach((key) => {
+ *      loggedInUser[key] = req.body[key]; //* updating the user object(both keys *and values will be updated from the req.body in the loggedInUser)
+ *    });
+ *
+ *    //! now as loggedInUser is a instance of the User model we can directly call *the .save() method to update it on the db.
+ *    await loggedInUser.save(); //*updating on db
+ *    res.send({
+ *      message: `${loggedInUser.firstName} , your profile is successfully *updated`,
+ *      data: loggedInUser
+ *    })
+ *  } catch (err) {
+ *    res.status(400).send("Something went wrong:-" + err.message);
+ *  }
+ *});
+ */
+//*1.44 mins debug the profile edit api
