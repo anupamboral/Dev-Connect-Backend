@@ -33,14 +33,15 @@ const validateProfileEditData = (userSentData) => {
     "photoUrl",
     "gender",
   ];
-  console.log(allowedFields);
-  console.log(Object.keys(userSentData.body));
+  // console.log(allowedFields);
+  // console.log(Object.keys(userSentData.body));
 
-  const isAllowed = Object.keys(userSentData.body).every((field) => {
-    allowedFields.includes(field);
-  }); //* it will return a boolean value
-  return !isAllowed; //* boolean value
+  const isEditAllowed = Object.keys(userSentData.body).every((field) =>
+    allowedFields.includes(field)
+  ); //* it will return a boolean value
+  return isEditAllowed; //* boolean value
 };
+
 module.exports = {
   validateSignUpData,
   validateSignInData,

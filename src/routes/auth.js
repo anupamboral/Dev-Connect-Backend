@@ -45,7 +45,7 @@ authRouter.post("/signin", async (req, res) => {
     if (!user) {
       throw new Error("Invalid credentials");
     }
-    console.log(user.getJWT);
+    // console.log(user.getJWT);
     const isValidPassword = await user.validatePassword(reqPassword);
 
     // console.log(isValidPassword);

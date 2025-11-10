@@ -1351,50 +1351,90 @@ app.use("/", connectionRequestRouter);
 //! PATCH /profile/edit API
 //* so now we will create a PATCH /profile/edit API , it will edit the user data , only not the password. but first of all we need a validation check to check if the user is sending only allowed fields for updating, of if the user sending any extra field like password then we will throw an error, so we will create this validateProfileEditData() inside utils/validate.js file .like below:-
 /*
-*const validateProfileEditData = (userSentData) => {
-*  const allowedFields = [
-*    "firstName",
-*    "lastName",
-*    "age",
-*    "emailId",
-*    "about",
-*    "skills",
-*    "photoUrl",
-*  ];
-*
-*  const isAllowed = Object.keys(userSentData.body).every((field) => {
-*    allowedFields.includes(field);
-*  }); //* it will return a boolean value
-*  return isAllowed; //* boolean value
-};
-*/
+ *const validateProfileEditData = (userSentData) => {
+ *  const allowedFields = [
+ *    "firstName",
+ *    "lastName",
+ *    "emailId",
+ *    "age",
+ *    "about",
+ *    "skills",
+ *    "photoUrl",
+ *    "gender",
+ *  ];
+ *  // console.log(allowedFields);
+ *  // console.log(Object.keys(userSentData.body));
+ *
+ *  const isEditAllowed = Object.keys(userSentData.body).every((field) =>
+ *    allowedFields.includes(field)
+ *  ); //* it will return a boolean value
+ *  return isEditAllowed; //* boolean value
+ *};
+ */
 
-//* then we will write the profile edit api inside the profileRouter present in routes/profile.js.like below:-
+//! then we will write the profile edit api inside the profileRouter present in routes/profile.js.like below:-
 /*
- *profileRouter.post("/profile/edit", userAuth, async (req, res) => {
+ *profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
  *  try {
- *    const isValidData = validateProfileEditData(req);
- *    if (!isValidData) {
+ *    // console.log(isValidData);
+ *    if (!validateProfileEditData(req)) {
  *      throw new Error("Invalid Input Data");
  *    }
  *
  *    const loggedInUser = req.user; //* we saved the user in userAuth middleware, *while validating the token, so we can access the user from req.user.
  *    //!So now above logged in user a instance of the User model.
- *
  *    //* forEach does not return the array it just change it for every field *according to the logic, map method return noe forEach.
- *    Object.keys(loggedInUser).forEach((key) => {
- *      loggedInUser[key] = req.body[key]; //* updating the user object(both keys *and values will be updated from the req.body in the loggedInUser)
- *    });
- *
+ *    Object.keys(req.body).forEach(
+ *      (key) => (loggedInUser[key] = req.body[key]) //* updating the user *object(both keys and values will be updated from the req.body in the *loggedInUser)
+ *    );
  *    //! now as loggedInUser is a instance of the User model we can directly call *the .save() method to update it on the db.
  *    await loggedInUser.save(); //*updating on db
  *    res.send({
  *      message: `${loggedInUser.firstName} , your profile is successfully *updated`,
- *      data: loggedInUser
- *    })
+ *      data: loggedInUser,
+ *    });
  *  } catch (err) {
  *    res.status(400).send("Something went wrong:-" + err.message);
  *  }
- *});
- */
-//*1.44 mins debug the profile edit api
+ *});*/
+
+//todo lets build password changing api , where we will first validate the emailId,password, then check if the new password is strong or not, then generate new hash for new password then update the password.Inside the profileRouter present inside routes/profile.js. APi name is PATCH /profile/password. like below:-
+/*
+profileRouter.patch("/profile/password", userAuth, async (req, res) => {
+  //* if token id not valid this request handler will not be executed and  error will thrown from userAuth middleware
+  try {
+    //* if the user is valid we have saved the user into req,user, so it;s the user instance
+    const user = req.user;
+    //* user entered dat for changing the password
+    console.log(req.body);
+    const { emailId, oldPassword, newPassword } = req.body;
+
+    //* checking if the emailId is correct or not
+    if (emailId !== user.emailId) {
+      throw new Error("Enter valid email Id");
+    }
+    //* checking if the password id valid or not
+    const isValidPassword = await user.validatePassword(oldPassword);
+    if (!isValidPassword) {
+      throw new Error("Enter valid old password to change it");
+    }
+
+    //* checking if the new password is strong or not
+    if (!validator.isStrongPassword(newPassword)) {
+      throw new Error(
+        "new password must contain  8 characters, at least 1 Lowercase, 1 Uppercase,1 Numbers, 1 Symbol"
+      );
+    }
+    const newPasswordHash = await bcrypt.hash(newPassword, 10); //* 1st arg is text password and 2nd arg is number of salt rounds.it returns a promise.
+    //* changing the password to new password hash
+    user.password = newPasswordHash;
+
+    //* saving the user into db
+    user.save();
+    //* sending response
+    res.send("password updated successfully");
+  } catch (err) {
+    res.status(400).send("Something went wrong:-" + err.message);
+  }
+});
+*/
