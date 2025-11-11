@@ -29,7 +29,7 @@ authRouter.post("/signup", async (req, res) => {
     res.send("User added successfully");
   } catch (err) {
     //! catching errors and sending error message
-    res.status(400).send(`Error saving the user:-${err.message}`);
+    res.status(400).send(`Error saving the user:- ${err.message}`);
   } //* status code 400 represents bad request , and we are using it here because we are sending request to the server to save the user data and if the request fails then we can use to 400 status code as it represents bad request.
 });
 authRouter.post("/signin", async (req, res) => {

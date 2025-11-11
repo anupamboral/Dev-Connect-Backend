@@ -1228,7 +1228,7 @@ app.post("/sendConnectionRequest", userAuth, async (req, res) => {
 //* So our decided apis are :-
 //* Post /signup
 //* Post /signin
-//* Post /signout
+//* Post /logout
 
 //* Get /profile/view
 //* Patch /profile/edit
@@ -1252,7 +1252,7 @@ app.post("/sendConnectionRequest", userAuth, async (req, res) => {
 //! AuthRouter
 //* Post /signup
 //* Post /signin
-//* Post /signout
+//* Post /logout
 
 //* similarly for profile related apis we can create profileRouter
 //! profileRouter
@@ -1373,6 +1373,7 @@ app.use("/", connectionRequestRouter);
  */
 
 //! then we will write the profile edit api inside the profileRouter present in routes/profile.js.like below:-
+//* as we will sending the data not only the message, so we will send it in json format, like industry level standards, so we will not use res.send() instead res.json({}) to send data in json format
 /*
  *profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
  *  try {
@@ -1389,7 +1390,8 @@ app.use("/", connectionRequestRouter);
  *    );
  *    //! now as loggedInUser is a instance of the User model we can directly call *the .save() method to update it on the db.
  *    await loggedInUser.save(); //*updating on db
- *    res.send({
+ *     //* as we are sending the data not only the message, so we will send it in json format, like industry level standards, so we will not use res.send() instead res.json({}) to send data in json format
+ *    res.json({
  *      message: `${loggedInUser.firstName} , your profile is successfully *updated`,
  *      data: loggedInUser,
  *    });
@@ -1400,41 +1402,121 @@ app.use("/", connectionRequestRouter);
 
 //todo lets build password changing api , where we will first validate the emailId,password, then check if the new password is strong or not, then generate new hash for new password then update the password.Inside the profileRouter present inside routes/profile.js. APi name is PATCH /profile/password. like below:-
 /*
-profileRouter.patch("/profile/password", userAuth, async (req, res) => {
-  //* if token id not valid this request handler will not be executed and  error will thrown from userAuth middleware
-  try {
-    //* if the user is valid we have saved the user into req,user, so it;s the user instance
-    const user = req.user;
-    //* user entered dat for changing the password
-    console.log(req.body);
-    const { emailId, oldPassword, newPassword } = req.body;
+ *profileRouter.patch("/profile/password", userAuth, async (req, res) => {
+ *  //* if token id not valid this request handler will not be executed and  * *error *will thrown from userAuth middleware
+ *  try {
+ *    //* if the user is valid we have saved the user into req,user, so it;s the *user instance
+ *    const user = req.user;
+ *    //* user entered dat for changing the password
+ *    console.log(req.body);
+ *    const { emailId, oldPassword, newPassword } = req.body;
+ *
+ *    //* checking if the emailId is correct or not
+ *    if (emailId !== user.emailId) {
+ *      throw new Error("Enter valid email Id");
+ *    }
+ *    //* checking if the password id valid or not
+ *    const isValidPassword = await user.validatePassword(oldPassword);
+ *    if (!isValidPassword) {
+ *      throw new Error("Enter valid old password to change it");
+ *    }
+ *
+ *    //* checking if the new password is strong or not
+ *    if (!validator.isStrongPassword(newPassword)) {
+ *      throw new Error(
+ *        "new password must contain  8 characters, at least 1 Lowercase, 1 *Uppercase,1 Numbers, 1 Symbol"
+ *      );
+ *    }
+ *    const newPasswordHash = await bcrypt.hash(newPassword, 10); //* 1st arg is *text password and 2nd arg is number of salt rounds.it returns a promise.
+ *    //* changing the password to new password hash
+ *    user.password = newPasswordHash;
+ *
+ *    //* saving the user into db
+ *    user.save();
+ *    //* sending response
+ *    res.send("password updated successfully");
+ *  } catch (err) {
+ *    res.status(400).send("Something went wrong:-" + err.message);
+ *  }
+ *});
+ */
 
-    //* checking if the emailId is correct or not
-    if (emailId !== user.emailId) {
-      throw new Error("Enter valid email Id");
-    }
-    //* checking if the password id valid or not
-    const isValidPassword = await user.validatePassword(oldPassword);
-    if (!isValidPassword) {
-      throw new Error("Enter valid old password to change it");
-    }
+//! Season 2 - Episode - 12 - Logical DB Query Compound indexes
+//* so now we will start to create connectionRequest related APIs, ,so we might think that we will add another field inside the UserSchema, to save the details of connection requests between users , but it is a bad idea, because, connection request can have different statuses like interested ,ignored,accepted, rejected.
+// *Another thing is there is a reason why we add collections(inside the database),is it defines something, so our UserSchema is defining the identity of a user, but whenever there are two person and they are making connection, that connection should have its own schema, because that is the relation between two entities. So let's create a schema for connection requests inside the models folder.So first inside the models folder wew ill create a file connectionRequest.js , and inside it first we will import mongoose(as it is required to create the schema) , then we will start to create the schema for connection Requests.
+//* now inside the schema , the there can be three fields , fromUserID(sender) , toUserId(receiver), and the status. we can also use the field names like senderId/receiverID but we will stick with decided names fromUserId,toUserId.
+//* for fromUserID and toUserId , we might think that type will be string , but as this will the userId, which is automatically created by mongoose, So here the type will be mongoose.Schema.Types.ObjectId
+//* so the status can have four values (interested ,ignored,accepted, rejected). So we can create a enum for it,Enum basically restrict the values of a field , so we can mention enum property and as value we can mention a array below:-
+/*
+ *  status: {
+ *   type: String,
+ *   enum: ["interested", "ignored", "accepted", "rejected"],
+ * },
+ *  OR
+ *  enum: {
+ *     values: ["interested", "ignored", "accepted", "rejected"],
+ *     message: `{VALUE} is incorrect`,
+ *   },
+ */
+//* it means the status field can have those four values, and no other value.and in the message we can mention a error message which will be shown if the user try to add any value which is not present in the array we mentioned.  we can read more about enum here in the doc.("https://mongoosejs.com/docs/schematypes.html#string-validators")
+//* in fb we could see when was the request sent, so we can also do that, we just need to add timeStamps , so let's add it.
+//* so we have to add some more validations, like the fromUserId ,toUserId,status all are required fields ,so we have to add required flag to all of the fields
+//* then we will create the connectionRequestModel and export it.
 
-    //* checking if the new password is strong or not
-    if (!validator.isStrongPassword(newPassword)) {
-      throw new Error(
-        "new password must contain  8 characters, at least 1 Lowercase, 1 Uppercase,1 Numbers, 1 Symbol"
-      );
-    }
-    const newPasswordHash = await bcrypt.hash(newPassword, 10); //* 1st arg is text password and 2nd arg is number of salt rounds.it returns a promise.
-    //* changing the password to new password hash
-    user.password = newPasswordHash;
+//* now let's build our connection request related APIs.
+//* so in routes/request.js we already have a api   /sendConnectionRequest , so let's modify it to build the api , so first we will change the path to /request/send/interested/:toUserId. so in the last instead of userId , we have used :toUserId because fromUserId we will already get from the req, as userAuth will save the user into the req while doing token validation.
+//* now when the user sees someones profile he can be either be interested and send the connection request or ignore the profile , so while calling the api, we can make it more dynamic. So we don't need to make two apis like:-
+//*Post /request/send/interested/:userId
+//*Post /request/send/ignored/:userId
+//* because in the two api's the only difference is interested and ignored, so we can make the url dynamic , then we don't need to make two APIs, we can just make one API by making the url dynamic.like below:-
+//* Post /request/send/:status/:userId
+//* so instead of writing interested or ignored , we made the api dynamic using ":status"
+//* inside the api we will get user from the req.user as we saved the user into the the req in userAuth while doing validation of token, then we will get the toUserId from the params and also the status from the params.
+//* then we will require the ConnectionRequest model and then create a instance using the data, and then we will save the data to the database using .save() method on the instance, and we can also save the data which is uploaded to the db by saving it inside a constant, now we will send the response back to the client but not using res.send(), instead we will use res.json() , because in the industry , they don't send the response with the data in the test format, instead they send the data using json format, so we will also send the response in the json format using the res.json() method like below.
+/*
+connectionRequestRouter.post(
+  "/request/send/:status/:userId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const user = req.user;
+      const fromUserId = user._id;
+      const toUserId = req.params.userId;
+      const status = req.params.status;
 
-    //* saving the user into db
-    user.save();
-    //* sending response
-    res.send("password updated successfully");
-  } catch (err) {
-    res.status(400).send("Something went wrong:-" + err.message);
+      //* making a connection request instance using the model
+      const connectionRequest = new ConnectionRequest({
+        fromUserId,
+        toUserId,
+        status,
+      });
+
+      //* saving data into db
+      const data = await connectionRequest.save();
+
+      //* sending response
+      res.json({
+        message: "Connection request successfully sent",
+        data,
+      });
+
+      console.log("sending connection request");
+      res.send(user.firstName + " is sending connection request");
+    } catch (error) {
+      //! catching errors and sending error message
+      res.status(400).send(`Something went wrong:- ${err.message}`);
+    }
   }
-});
+);
 */
+//* so let's test this api using postman.
+//* so we will login using ms dhoni and sent the connection request to om swami ji. so in postman , in the place of status we will write interested and in the place of toUserId we will write the userId of om swami ji.we can get the user id from the mongo compass.
+
+//* so the connection request is ent successfully and we got the data in postman as response, and if we open our cluster in mongo db and refresh the collections then we will see a new connectionRequests collection is added and our data is also added.
+
+//* but the api we built is not secure right now, so just written intern level code, for this api, so let's write expert level code and make it more secure,so right now ,we are getting the status from the url params, so a hacker can just accepted in the place of status , and that will save the connection request status as accepted in the database. but should not happen, for this api the status should be either interested or ignored , so let's add this validation so, the status can be only interested or ignored.No one can just make changes in the url and misuse our api,because we should never trust the userData remember, some hacker can send malicious data if we don't secure the api.
+//! so before creating the instance let's create the validation check. in this validation check we are doing early return,  writing return keyword is important , while sending the response from here , if we don't write return then the code execution will move further which should not happen , so always write return if you are sending response early, or you can just throw an error rather than sending response.
+const allowedStatuses = ["interested", "ignored"];
+if (!allowedStatuses.includes(status)) {
+  return res.json({ message: "invalid status:- " + status });
+}

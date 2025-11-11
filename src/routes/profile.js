@@ -31,7 +31,8 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     // console.log("new" + loggedInUser);
     //! now as loggedInUser is a instance of the User model we can directly call the .save() method to update it on the db.
     await loggedInUser.save(); //*updating on db
-    res.send({
+    //* as we are sending the data not only the message, so we will send it in json format, like industry level standards, so we will not use res.send() instead res.json({}) to send data in json format
+    res.json({
       message: `${loggedInUser.firstName} , your profile is successfully updated`,
       data: loggedInUser,
     });
