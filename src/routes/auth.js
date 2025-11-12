@@ -51,7 +51,7 @@ authRouter.post("/signin", async (req, res) => {
     // console.log(isValidPassword);
     //* when password is validated and right , sending successful message to client
     if (isValidPassword) {
-      //* generating JWT(token)(sending the userId as secret data inside the token)
+      //* generating JWT(token)(sending the userId as secret data inside the token)(It does not return promise so we don't need to write await.)
       const token = user.getJWT(); //* if above the user exist in the database , it saved the user data into the user constant, so the user is basically a instance of the UserSchema, so we can access the methods available on the user schema,as we shifted the logic of generating the JWT(token) to a userSchema method named getJWT(),it returns the token.
 
       //* sending the cookie

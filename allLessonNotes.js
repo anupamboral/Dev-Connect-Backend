@@ -1516,7 +1516,87 @@ connectionRequestRouter.post(
 
 //* but the api we built is not secure right now, so just written intern level code, for this api, so let's write expert level code and make it more secure,so right now ,we are getting the status from the url params, so a hacker can just accepted in the place of status , and that will save the connection request status as accepted in the database. but should not happen, for this api the status should be either interested or ignored , so let's add this validation so, the status can be only interested or ignored.No one can just make changes in the url and misuse our api,because we should never trust the userData remember, some hacker can send malicious data if we don't secure the api.
 //! so before creating the instance let's create the validation check. in this validation check we are doing early return,  writing return keyword is important , while sending the response from here , if we don't write return then the code execution will move further which should not happen , so always write return if you are sending response early, or you can just throw an error rather than sending response.
-const allowedStatuses = ["interested", "ignored"];
-if (!allowedStatuses.includes(status)) {
-  return res.json({ message: "invalid status:- " + status });
+/*
+ *const allowedStatuses = ["interested", "ignored"];
+ *if (!allowedStatuses.includes(status)) {
+ *  return res.json({ message: "invalid status:- " + status });
+ *}
+ */
+
+//! Duplicate request issue
+//* So there is one more problem in our api, right now if MsDhoni sends connection request to Om Swami Ji it will be in interested state, then if again MsDhoni tries to send second request then he can do it, so in the database there will be two duplicate requests ms dhoni sended to Om swami ji.And another problem is when ms dhoni already sent request to omswami ji now om swamiji should not be able to send connection request to to ms dhoni.But we can do this, so we should restrict the user to send the request when he has already sent a request once or, the other person sent him a connection request.
+//* So before making the instance and after the allowedStatus check we will , check if the connection request already exist in our db fromUser to toUser or toUser to fromUser ( for example if msdhoni already sent request to omswami ji or om swami sent request to ms dhoni , in both cases we will restrict the user to send a new connection request).
+//* So using the findOne() method we will try to find if there is an existing request present in the db which is either sent fromUserId to toUserId(sender to receiver) or toUserId to fromUserId(receiver to sender).To do it we have to know how to write Or condition.It is mongo db thing. To write thing inside the method , as usual we will write a object, inside the object as usual we write the condition, but to write or condition we will wite $or:[], inside this array we will write two objects , one for each condition, so it will be a array of objects. And then if the we find the connection request matching to the condition then we will do early return and send response to the user that "Connection request already exist".Like this :-
+//* checking if there is a existing connection request
+const existingConnectionRequest = await ConnectionRequest.findOne({
+  $or: [
+    { fromUserId, toUserId }, //* it is same as writing {fromUserId:fromUserId,toUserId:toUserId}(if sender already sent request and he is sending again)
+    { fromUserId: toUserId, toUserId: fromUserId }, //* if receiver already sent to sender previously now sender is also trying to send receiver
+  ],
+});
+
+//* if connection request exist with ignore status then we should change it to interested if he is now interested
+if (
+  existingConnectionRequest &&
+  existingConnectionRequest.status === "ignored" &&
+  status === "interested"
+) {
+  existingConnectionRequest.status = "interested";
+  //* saving the user with interested status and doing early return with sending the response
+  existingConnectionRequest.save();
+  return res.json({
+    message: `${req.user.firstName} sent connection request to ${receiverProfile.firstName}`,
+  });
 }
+
+//* if connection request exist (with interested status) but user user want to cancel it then update the request with ignored status
+if (
+  existingConnectionRequest &&
+  existingConnectionRequest.status === "interested" &&
+  status === "ignored"
+) {
+  existingConnectionRequest.status = "ignored";
+  //* saving the user with ignored status and doing early return with sending the response
+  existingConnectionRequest.save();
+  return res.json({
+    message: `Request to ${receiverProfile.firstName} is canceled `,
+  });
+}
+//* if connection request exist (with interested status) but user sent again request with interested status
+if (existingConnectionRequest) {
+  //*early return as connection already exist
+  return res.json({ message: "Connection request already exist" });
+}
+
+//* now one more validation we can perform, we were getting the toUserId from the params , but a hacker can change the toUserId , to some random userId , which he might copied from tinder , he just need a fake mongo id , and if he change the url params and enter a fake user id then , in our document a connection request document will be created in our database with a fake to0UserId , which user does not even exist in our database.So before checking if the connectionRequest already exist or not we will first check if the toUserId is a actual User who is present in our User collection or not, if the user id is not present in our User collection then we will do early return and send message :- "user not found". like below:-
+/*
+ *      const receiverProfile = await User.findById(toUserId);
+ *      //* early return if receiver id not present in our database
+ *      if (!receiverProfile) {
+ *        return res.json({ message: "User not found" });
+ *      }
+ */
+
+//* Now one more validation check is remaining, what if the user is sending request to himself,it should not be allowed , we can perform this validation inside the API but , to write this validation , we will learn how we can add validation checks ata the schema.level using schema .pre("save") function , which works like a middleware, because every time it will called before calling .save() method on the instance. As this is like a middleware so calling next() is important , mentioning next param while making the function is also important then only we can call next(), So we will create this .pre() middleware on connectionRequestSchema and inside this we will check if the fromUserId to toUserId is same and if both are same then we will throw an error .While checking fromUserId === toUserId ,we can't do it like we do for strings using ===.Because its a mongo db object id so we have to use .equals method to compare.and always write normal function not arrow function while writing pre() as we will use this key inside it to access the instance. Like below:-
+connectionRequestSchema.pre("save", function (next) {
+  const connectionRequest = this;
+  //* checking if sender and the receiver is same , if same then throwing an error
+  if (connectionRequest.toUserId.equals(connectionRequest.fromUserId)) {
+    throw new Error("Request sender and receiver can not be same.");
+  } //* if error happens it will go to catch block of the request handler where it is called as throwing an error
+  //* moving to request handler
+  next();
+}); //* this will be executed every time before calling the .save method on any instance created using connectionRequestSchema.
+
+//* we can read more about schema.pre() here in the doc :-https://mongoosejs.com/docs/middleware.html#pre
+
+//!Dynamic Message sending(as our status is dynamic and can have both values interested and ignored)
+//*  as our status is dynamic and can have both values interested and ignored , so we have to send the response to user also dynamically , if we don't do that then even the user ignored someone's profile then also "connection request sent message will be sent" .This should not happen , so depending on eth status we have send the response dynamically using ternary operator, req.user(got from userAuth) amd receiverProfile( got using id for validation to know if the receiver exist or not).like this:-
+/*
+ * res.send({
+ *   message:
+ *     status === "interested"
+ *       ? `${req.user.firstName} sent connection request to * ${receiverProfile.firstName}`
+ *       : `${req.user.firstName} is not interested in  * ${receiverProfile.firstName}'s profile`,
+ * });
+ */

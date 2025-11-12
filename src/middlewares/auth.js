@@ -33,7 +33,7 @@ const userAuth = async (req, res, next) => {
     if (!token) {
       throw new Error("Token is not valid!!");
     }
-    const decodedObj = jwt.verify(token, "dev@666Connect"); //* first param received token , second param secret password
+    const decodedObj = jwt.verify(token, "dev@666Connect"); //* first param received token , second param secret password.It does not return promise so we don't need to write await.
     const { _id } = decodedObj;
 
     const user = await User.findById(_id);
