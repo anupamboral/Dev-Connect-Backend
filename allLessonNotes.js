@@ -1526,6 +1526,7 @@ connectionRequestRouter.post(
 //! Duplicate request issue
 //* So there is one more problem in our api, right now if MsDhoni sends connection request to Om Swami Ji it will be in interested state, then if again MsDhoni tries to send second request then he can do it, so in the database there will be two duplicate requests ms dhoni sended to Om swami ji.And another problem is when ms dhoni already sent request to omswami ji now om swamiji should not be able to send connection request to to ms dhoni.But we can do this, so we should restrict the user to send the request when he has already sent a request once or, the other person sent him a connection request.
 //* So before making the instance and after the allowedStatus check we will , check if the connection request already exist in our db fromUser to toUser or toUser to fromUser ( for example if msdhoni already sent request to omswami ji or om swami sent request to ms dhoni , in both cases we will restrict the user to send a new connection request).
+//! using $or while doing query from mongo database.
 //* So using the findOne() method we will try to find if there is an existing request present in the db which is either sent fromUserId to toUserId(sender to receiver) or toUserId to fromUserId(receiver to sender).To do it we have to know how to write Or condition.It is mongo db thing. To write thing inside the method , as usual we will write a object, inside the object as usual we write the condition, but to write or condition we will wite $or:[], inside this array we will write two objects , one for each condition, so it will be a array of objects. And then if the we find the connection request matching to the condition then we will do early return and send response to the user that "Connection request already exist".Like this :-
 //* checking if there is a existing connection request
 const existingConnectionRequest = await ConnectionRequest.findOne({
@@ -1535,7 +1536,7 @@ const existingConnectionRequest = await ConnectionRequest.findOne({
   ],
 });
 
-//* if connection request exist with ignore status then we should change it to interested if he is now interested
+//* if connection request exist with ignore status then user want to change it to interested , so updating the request status to "interested"
 if (
   existingConnectionRequest &&
   existingConnectionRequest.status === "ignored" &&
@@ -1543,13 +1544,14 @@ if (
 ) {
   existingConnectionRequest.status = "interested";
   //* saving the user with interested status and doing early return with sending the response
-  existingConnectionRequest.save();
+  const data = await existingConnectionRequest.save();
   return res.json({
     message: `${req.user.firstName} sent connection request to ${receiverProfile.firstName}`,
+    data: data,
   });
 }
 
-//* if connection request exist (with interested status) but user user want to cancel it then update the request with ignored status
+//* if connection request exist (with interested status) but  user want to cancel it then update the request with ignored status
 if (
   existingConnectionRequest &&
   existingConnectionRequest.status === "interested" &&
@@ -1557,15 +1559,22 @@ if (
 ) {
   existingConnectionRequest.status = "ignored";
   //* saving the user with ignored status and doing early return with sending the response
-  existingConnectionRequest.save();
+  const data = await existingConnectionRequest.save();
   return res.json({
     message: `Request to ${receiverProfile.firstName} is canceled `,
+    data: data,
   });
 }
-//* if connection request exist (with interested status) but user sent again request with interested status
+//* if connection request exist (with interested status) but user sent again request with interested status or if previously ignored but again the user want to ignore sending reding response that already connection request exist or already ignored the profile.
 if (existingConnectionRequest) {
   //*early return as connection already exist
-  return res.json({ message: "Connection request already exist" });
+  return res.json({
+    message:
+      existingConnectionRequest.status === "interested"
+        ? "Connection request already exist"
+        : "Already cancelled the request",
+    data: existingConnectionRequest,
+  });
 }
 
 //* now one more validation we can perform, we were getting the toUserId from the params , but a hacker can change the toUserId , to some random userId , which he might copied from tinder , he just need a fake mongo id , and if he change the url params and enter a fake user id then , in our document a connection request document will be created in our database with a fake to0UserId , which user does not even exist in our database.So before checking if the connectionRequest already exist or not we will first check if the toUserId is a actual User who is present in our User collection or not, if the user id is not present in our User collection then we will do early return and send message :- "user not found". like below:-
@@ -1600,3 +1609,18 @@ connectionRequestSchema.pre("save", function (next) {
  *       : `${req.user.firstName} is not interested in  * ${receiverProfile.firstName}'s profile`,
  * });
  */
+
+//! Indexes
+//* indexes are very important, because when our database grows and there are millions of users, and we try to find some document by doing a query using find() or findOne() or any related methods, then database will check every doc one by one to filter based on our passed filters , suppose , we are searching a name Ramesh , and there are so many users with this name, so database may take 5 minutes to find all the users with this ramesh name, but if we indexed the firstName field then it will take so mush less time to find the users, so indexes are important.
+//* suppose we want to query in database using emailId, so do we need to index on the emailId field on the schema, but as we added the unique flag on the emailId field, so it already added the index on the emailId field
+//! So unique flag automatically always add indexes to a field if we mention the unique : true . but for other fields , suppose we need to query using the firstName , then we can't add the unique :true, on firstName field because then two users with same firstName will not be able to account on our platform, so if we really need index om some field then , we can just add the flag index:true, flag, and it will add index to that field.
+//* single index :- if we want to add index on single field then we can just add the index: true , flag on the that specific field, on the schema of that field.It is applicable when we want to do query using just one field, like searching doc using just email.
+//* compound indexes :- when do query simultaneously using two fields, like when we are trying to find existingConnectionRequest inside the /request/send/:status/:userId api , we are doing the query simultaneously using two fields - fromUserId and toUserId. so in this case adding index to just one field will not work, so we have to add index to both of the fields then it will be easy for mongodb to find any connectionRequest document.So adding indexes to both fields are called compound indexes. So to set indexes for both fields so basically setting compound indexes we have to go to the connectionRequest Schema , unhide models/connectionRequest.js , so below the schema we will just write it like we write schema methods , but always do oit before the model creation, so we will create it like:-
+connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }); //* 1 means ascending order, -1 means descending order.
+//* ascending and descending means in which order mongo db stores the data, and there can be more values, but mostly we use 1 or -1.we can read more in the doc.here:-https://mongoosejs.com/docs/api/schema.html#Schema.prototype.index()
+//* but we should not create indexes for all the fields , because if create for all fields then database has to store that data which becomes tough for databse , so only create indexes for thoese fields , using which you do query, and if some field has unique flag then automatically index will be added remember that like we have added for emailId field in user schema.
+//! So we should know why do we indexes? Advantages and disadvantages of using indexes,interviewer can ask it.
+
+//* we have learnt about how to do a query using or condition , using "$or:[]", but what if we have query using and condition, not condition ,nor condition, so in that cases we have to do different types of query , we can read about these here in the mongodb doc:-https://www.mongodb.com/docs/manual/reference/mql/query-predicates/logical/
+//* there are more types of query we can write we can learn them from here :- "https://www.mongodb.com/docs/manual/reference/mql/query-predicates/"
+//! and whatever you are building always think about corner cases, either attackers can use you api's to send malicious data.
