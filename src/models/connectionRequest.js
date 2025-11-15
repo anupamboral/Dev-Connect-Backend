@@ -39,7 +39,7 @@ connectionRequestSchema.pre("save", function (next) {
 }); //* this will be executed every time before calling the .save method on any instance created using connectionRequestSchema.
 
 //* while naming the model we always use PascalCase,so the first letter start from capital letter
-const ConnectionRequestModel = new mongoose.model(
+const ConnectionRequestModel = mongoose.model(
   "ConnectionRequest",
   connectionRequestSchema
 ); //*1st param name and 2nd is schema

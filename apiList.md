@@ -16,10 +16,11 @@ similarly for connectionRequest related apis we can create connectionRequestRout
 
 ## connectionRequestRouter
 
-Post /request/send/interested/:userId
-Post /request/send/ignored/:userId
-Post /request/send/accepted/:userId
-Post /request/send/rejected/:userId
+<!-- * Post /request/send/interested/:userId
+* Post /request/send/ignored/:userId --> * Post /request/send/:status/:userId (dynamic for both apis)
+
+Post /request/review/accepted/:connectionRequestId
+Post /request/review/rejected/:connectionRequestId
 
 similarly for user related apis we can create userRouter
 

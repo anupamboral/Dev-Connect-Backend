@@ -1237,8 +1237,8 @@ app.post("/sendConnectionRequest", userAuth, async (req, res) => {
 //* Post /request/send/interested/:userId
 //* Post /request/send/ignored/:userId
 
-//* Post /request/send/accepted/:userId
-//* Post /request/send/rejected/:userId
+//* Post /request/review/accepted/:connectionRequestId
+//* Post /request/review/rejected/:connectionRequestId
 
 //* Get /user/connections
 //* Get /user/requests/received
@@ -1264,8 +1264,8 @@ app.post("/sendConnectionRequest", userAuth, async (req, res) => {
 //! connectionRequestRouter
 //* Post /request/send/interested/:userId
 //* Post /request/send/ignored/:userId
-//* Post /request/send/accepted/:userId
-//* Post /request/send/rejected/:userId
+//* Post /request/review/accepted/:connectionRequestId
+//* Post /request/review/rejected/:connectionRequestId
 
 //* similarly for user related apis we can create userRouter
 //!userRouter
@@ -1624,3 +1624,7 @@ connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }); //* 1 means ascen
 //* we have learnt about how to do a query using or condition , using "$or:[]", but what if we have query using and condition, not condition ,nor condition, so in that cases we have to do different types of query , we can read about these here in the mongodb doc:-https://www.mongodb.com/docs/manual/reference/mql/query-predicates/logical/
 //* there are more types of query we can write we can learn them from here :- "https://www.mongodb.com/docs/manual/reference/mql/query-predicates/"
 //! and whatever you are building always think about corner cases, either attackers can use you api's to send malicious data.
+
+//! Season 2 - Episode - 13 - Ref,Populate & Thought process of writing apis
+//* in the previous lesson we built the connection request sending api which is dynamic and work for both "interested and ignored status", now we will built the connection request reviewing api, so using this api the receiver will accept or reject the connection request , that's why we are calling it request reviewing api, and to accept or reject the request , we don't need to make two different apis , instead , like before we will also make this request review api dynamic, so it can work for both statuses. So in the client side/browser the receiver will see the request and , then he will can this review api to either accept or reject the request, so while calling the api he will send us the status(receiver's response accepted or rejected), and the _id of same connection request receiver received with interested status , so our api path will look like :- request/review/:status/:connectionRequestId
+//* so when this api will be called , first we will check,the token validation through userAuth,and then inside a try{}catch{} block we will get the loggedInUser from req.user as we already save it userAuth, and get status and connectionRequestId from the params, then we will check what status user is sending , it should be either "accepted or rejected" if it something else then throw an error, then , we will try to find a doc in our database collection , which has a same connectionRequestId , the toUserId should be same as the loggedInUser's id and status should be only "interested". if we don't find a user with these matching details we will throw an error but if we find a connection Request doc matching with these details then we will update the doc , with the status dynamically (either accepted or rejected coming from params), then save the connection request instance using .save() method and get the saved data inside a instance and then we will send the response to the user with the updated data and message.So let's go inside routes/requests.js and create the api.

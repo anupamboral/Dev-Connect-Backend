@@ -1,9 +1,9 @@
 const express = require("express");
 const { userAuth } = require("../middlewares/auth");
-const connectionRequestRouter = express.Router();
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
 
+const connectionRequestRouter = express.Router();
 connectionRequestRouter.post(
   "/request/send/:status/:userId",
   userAuth,
@@ -98,6 +98,47 @@ connectionRequestRouter.post(
     } catch (err) {
       //! catching errors and sending error message
       res.status(400).send(`Something went wrong:- ${err.message}`);
+    }
+  }
+);
+connectionRequestRouter.post(
+  "/request/review/:status/:connectionRequestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      //* so when this api will be called , first we will check,the token validation through userAuth,and then inside a try{}catch{} block we will get the loggedInUser from req.user as we already save it userAuth, and get status and connectionRequestId from the params, then we will check what status user is sending , it should be either "accepted or rejected" if it something else then throw an error, then , we will try to find a doc in our database collection , which has a same connectionRequestId , the toUserId should be same as the loggedInUser's id and status should be only "interested". if we don't find a user with these matching details we will throw an error but if we find a connection Request doc matching with these details then we will update the doc , with the status dynamically (either accepted or rejected coming from params), then save the connection request instance using .save() method and get the saved data inside a instance and then we will send the response to the user with the updated data and message.So let's go inside routes/requests.js and create the api.
+      const loggedInUser = req.user;
+      const { status, connectionRequestId } = req.params;
+
+      //* checking if the user entered status value contains below values or not
+      const allowedStatuses = ["accepted", "rejected"];
+      //* throwing error when it is not contains any values from allowedStatuses values
+      if (!allowedStatuses.includes(status)) {
+        throw new Error("Incorrect status");
+      }
+
+      //* finding connection req doc where _id matches the connectionRequestId sent by user , toUserId is the loggedUser's(receiver's) id ,a nd status is only interested
+      const connectionRequest = await ConnectionRequest.findOne({
+        _id: connectionRequestId,
+        toUserId: loggedInUser._id,
+        status: "interested",
+      });
+      //* throwing error when connection request is not found with matching details
+      if (!connectionRequest) {
+        return res.status(404).send("Connection Request not found");
+      }
+
+      //* if connection request is found then update it with current status given by user,dynamically(either accepted or rejected).
+      connectionRequest.status = status;
+      //*  saving the data to database
+      const data = await connectionRequest.save();
+      //*sending response with data
+      res.json({
+        message: "Connection request is " + status,
+        data: data,
+      });
+    } catch (err) {
+      res.status(400).send("something went wrong:-" + err.message);
     }
   }
 );
