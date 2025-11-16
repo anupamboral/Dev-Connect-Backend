@@ -1627,4 +1627,54 @@ connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }); //* 1 means ascen
 
 //! Season 2 - Episode - 13 - Ref,Populate & Thought process of writing apis
 //* in the previous lesson we built the connection request sending api which is dynamic and work for both "interested and ignored status", now we will built the connection request reviewing api, so using this api the receiver will accept or reject the connection request , that's why we are calling it request reviewing api, and to accept or reject the request , we don't need to make two different apis , instead , like before we will also make this request review api dynamic, so it can work for both statuses. So in the client side/browser the receiver will see the request and , then he will can this review api to either accept or reject the request, so while calling the api he will send us the status(receiver's response accepted or rejected), and the _id of same connection request receiver received with interested status , so our api path will look like :- request/review/:status/:connectionRequestId
-//* so when this api will be called , first we will check,the token validation through userAuth,and then inside a try{}catch{} block we will get the loggedInUser from req.user as we already save it userAuth, and get status and connectionRequestId from the params, then we will check what status user is sending , it should be either "accepted or rejected" if it something else then throw an error, then , we will try to find a doc in our database collection , which has a same connectionRequestId , the toUserId should be same as the loggedInUser's id and status should be only "interested". if we don't find a user with these matching details we will throw an error but if we find a connection Request doc matching with these details then we will update the doc , with the status dynamically (either accepted or rejected coming from params), then save the connection request instance using .save() method and get the saved data inside a instance and then we will send the response to the user with the updated data and message.So let's go inside routes/requests.js and create the api.
+//* so when this api will be called , first we will check,the token validation through userAuth,and then inside a try{}catch{} block we will get the loggedInUser from req.user as we already save it userAuth, and get status and connectionRequestId from the params, then we will check what status user is sending , it should be either "accepted or rejected" if it something else then throw an error, then , we will try to find a doc in our database collection , which has a same connectionRequestId , the toUserId should be same as the loggedInUser's id and status should be only "interested". if we don't find a user with these matching details we will throw an error but if we find a connection Request doc matching with these details then we will update the doc , with the status dynamically (either accepted or rejected coming from params), then save the connection request instance using .save() method and get the saved data inside a instance and then we will send the response to the user with the updated data and message.So let's go inside routes/requests.js and create the api.Like below:-
+/*
+connectionRequestRouter.post(
+  "/request/review/:status/:connectionRequestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user;
+      const { status, connectionRequestId } = req.params;
+
+      //* checking if the user entered status value contains below values or not
+      const allowedStatuses = ["accepted", "rejected"];
+      //* throwing error when it is not contains any values from allowedStatuses values
+      if (!allowedStatuses.includes(status)) {
+        throw new Error("Incorrect status");
+      }
+
+      //* finding connection req doc where _id matches the connectionRequestId sent by user , toUserId is the loggedUser's(receiver's) id ,a nd status is only interested
+      const connectionRequest = await ConnectionRequest.findOne({
+        _id: connectionRequestId,
+        toUserId: loggedInUser._id,
+        status: "interested",
+      });
+      //* throwing error when connection request is not found with matching details
+      if (!connectionRequest) {
+        return res.status(404).send("Connection Request not found");
+      }
+
+      //* if connection request is found then update it with current status given by user,dynamically(either accepted or rejected).
+      connectionRequest.status = status;
+      //*  saving the data to database
+      const data = await connectionRequest.save();
+      //*sending response with data
+      res.json({
+        message: "Connection request is " + status,
+        data: data,
+      });
+    } catch (err) {
+      res.status(400).send("something went wrong:-" + err.message);
+    }
+  }
+);
+*/
+
+//! Deciding between POST V/S GET api
+//* So while developing apis Will we know that when to create a post api and when to create a get api And what should be the thought process While building those apis So previously when we were creating the login api We were thinking that We're Getting the Login data from the user And then we're not saving anything new in tour database Instead we're Compar Already saved things with the user inputted data and then if it matches then we Giving response that you're logged in successfully So why should Make it a post api Because from the database we're just getting the data and not posting Anything new So we have other reasons For the security purposes to make it a post api, But the main reason Of creating A post API is not Posting a new data into the database Actually we create a Post api When the user is In putting some data Or basically posting some data While he is sending the request from the browser Or Postman or client side, So it is not about posting something new to the database it is About When the user is making the api call if he is Passing any input through the request body Or through the url params , Show whenever In a api The user w In Input some data or pass some data through the params of the url every time that API should be a post api, If we look from the view of the login api also The user Sending his Credentials Through the request body So basically he is passing some data Through the api That's why it is a post api not a gate api because while calling the api he is passing some data It could be either using the request body Or the parameters of the url But whenever the user is passing some data Through the parameters of the url or the request body every time it should be a post api And in the other hand Whenever the user Is not passing anything So he is not even passing some data through the parameters of the URL and not also passing through The request body In that case it should be a get api Like the profile view api We're not passing any data to get the profile data or not passing any data through the parameters Or the request body we are just calling the api and getting the data so in those cases The api should A get api.
+
+//! Thinking behind security of post api and get api
+//* So whenever we're building an api We should always think Api is King King's palace and we are the security guard of Kings palace So like a security gu Do Do not let Stranger enter into the palace without Authorization And also Also the security guard checks the person When he comes out of King's palace, If he is taking something out of the palace without permission or not, Similarly When we're building an api We should Act like a security guard Of that api So when we Creating a post api We should always think like a security guard because if we don't secure our api A attacker Send any malicious data Through our api And if that data is saved Our database That means Our whole data Is not clean Now so we should never let the attacker misuse our apis So when we are building a post api Whatever data we are Getting through the request We should always validate and sanitize that data We should always cheque What data the user is entering What should be the format of that data How long is that data What type of data the user is entering And we should validate every Field of that data Whatever the user is sending through the request body And also we have to validate Whatever data we are getting through the parameters of the url so the attacker can Change the url Parameters To send malicious data Like he Change the status of the request or he might change the idea of the request or anything he To with the apis so we should always 100% Secure our apis that it cheques Every data it gets from the url and the request body And after doing all of the validations and all of the sanitization then only we should write dot save method which actually saves the data into the database That's Always we should write all of Api code inside a try catch block and after doing all of the validations and all of the sanitization and all of the cheques if the d is is Clean or After doing all of these We should then only save the data to the database and then only we should send the response Data to the Before doing the validations we should never save the data to the database We have heard about the data breaches happens Which breach the data of millions of u and and that actually happens because Developers Leave Please wear the attackers can attack and Do theft of the user's personal data So we should Always secure our data And our apis to the maximum level that no attacker can misuse our ap That That was the thinking behind building a post api Now we See that how we should When we are Building a get api, So when we are building a get api First of all The most important thing is Validating the user So we should always validate the user With the token And if the token is not correct then Always rewrite the user to the Login page Because if the credentials are not right so if the user Don't have a validated token Then he should be never Able to fetch any data from our Api So we should always Validate the user first that The locked in user Has right credentials And a valid token Once the token is validated Then we have to always ensure that we are only sending him The allowed data not more than that We should never send Unnecessary data to the user Some developers allow their get api to send all of the data that's why all of these data breach happens so we should always Send the data mindfully The response should always contain The necessary data only The allowed data only, and the user is 100% authorized.
+
+//* lets create the userRouter to build the rest apis. So inside the routes folder we will create a user.js , and inside that we will create userRouter.
