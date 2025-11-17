@@ -13,6 +13,7 @@ const cookieParser = require("cookie-parser");
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const connectionRequestRouter = require("./routes/request");
+const userRouter = require("./routes/user");
 
 //! importance of express.json() middleware.
 //* so to convert the json to js object , we will use a middleware given to us by express.js. and that's express.json(). this middleware can take the json from the req.body then convert that to js object then again put that inside the req.body and we can then easily access it form the request body.
@@ -29,6 +30,7 @@ app.use(cookieParser());
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", connectionRequestRouter);
+app.use("/", userRouter);
 
 connectDb()
   .then(() => {

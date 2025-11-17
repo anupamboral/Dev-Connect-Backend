@@ -1677,4 +1677,53 @@ connectionRequestRouter.post(
 //! Thinking behind security of post api and get api
 //* So whenever we're building an api We should always think Api is King King's palace and we are the security guard of Kings palace So like a security gu Do Do not let Stranger enter into the palace without Authorization And also Also the security guard checks the person When he comes out of King's palace, If he is taking something out of the palace without permission or not, Similarly When we're building an api We should Act like a security guard Of that api So when we Creating a post api We should always think like a security guard because if we don't secure our api A attacker Send any malicious data Through our api And if that data is saved Our database That means Our whole data Is not clean Now so we should never let the attacker misuse our apis So when we are building a post api Whatever data we are Getting through the request We should always validate and sanitize that data We should always cheque What data the user is entering What should be the format of that data How long is that data What type of data the user is entering And we should validate every Field of that data Whatever the user is sending through the request body And also we have to validate Whatever data we are getting through the parameters of the url so the attacker can Change the url Parameters To send malicious data Like he Change the status of the request or he might change the idea of the request or anything he To with the apis so we should always 100% Secure our apis that it cheques Every data it gets from the url and the request body And after doing all of the validations and all of the sanitization then only we should write dot save method which actually saves the data into the database That's Always we should write all of Api code inside a try catch block and after doing all of the validations and all of the sanitization and all of the cheques if the d is is Clean or After doing all of these We should then only save the data to the database and then only we should send the response Data to the Before doing the validations we should never save the data to the database We have heard about the data breaches happens Which breach the data of millions of u and and that actually happens because Developers Leave Please wear the attackers can attack and Do theft of the user's personal data So we should Always secure our data And our apis to the maximum level that no attacker can misuse our ap That That was the thinking behind building a post api Now we See that how we should When we are Building a get api, So when we are building a get api First of all The most important thing is Validating the user So we should always validate the user With the token And if the token is not correct then Always rewrite the user to the Login page Because if the credentials are not right so if the user Don't have a validated token Then he should be never Able to fetch any data from our Api So we should always Validate the user first that The locked in user Has right credentials And a valid token Once the token is validated Then we have to always ensure that we are only sending him The allowed data not more than that We should never send Unnecessary data to the user Some developers allow their get api to send all of the data that's why all of these data breach happens so we should always Send the data mindfully The response should always contain The necessary data only The allowed data only, and the user is 100% authorized.
 
+//! user/requests/received api (making relation between two collections)
 //* lets create the userRouter to build the rest apis. So inside the routes folder we will create a user.js , and inside that we will create userRouter.
+//* now first here inside the userRouter we will create the get/ user/requests/received api, which will give the data to of all received connection requests. Basically all the the connection requests where toUserId is same as  loggedInUser's id and the status is interested,Because if we don't mention status as interested then it will also return the ignored requests.
+//* So lets make this api.
+//* first we will validate the token using userAuth middleware, then in the request handler we will get the loggedInUser from req.user, as we saved the user inside req.user in userAuth, then from the ConnectionRequest model we will find all requests where where toUserId is same as  loggedInUser's id and the status is interested,Because if we don't mention status as interested then it will also return the ignored requests.
+//* if there is no returned connectionRequest in the doc then we will do early return with the message "No new connection requests exist". But if any connection Request exist , then if we just send the data of the connection Request data(docs/objects) then it will only contain fromUserId,toUserId,Status, but in the Ui we also show the profile Data of the request sender we can's display the fromUserId only , we have to show the sender's profile data, So there is two ways to handle it, one is we iterate , the array , and using the fromUserId of all docs, we fetch all the request sender one by one from the User model but that's a bad way of handling it, another way is building relation between two collections, basically to make a connection between two collections(User collection and ConnectionRequest collection), we have to go the collectionRequest Schema present inside models/connectionRequest.js and in the schema , inside the fromUserId field's object , we will mention a property named ref :"User", basically we are writing  that this fromUserId is a reference from User collection's doc id , we are creating a link between two collection, so whenever mongoDb will create a new connection Request doc it will maintain a link with User collection doc where the _id is same as fromUserId.Basically we are creating a reference to the User collection. Now our two collections are linked.like below:-
+/*
+ * fromUserId: {
+ *    type: mongoose.Schema.Types.ObjectId,
+ *    ref: "User", //*reference to the User collection
+ *    required: true,
+ *  }
+ */
+//* now we have to come back to userRouter,where we were writing user/requests/received api , so inside the api , when we are making call to ConnectionRequest model, using .find() method , we just have to populate the reference we created with User collection, how we can populate the reference?
+//* after the  find method we have to chain another method .populate("ReferencedFieldName",[requiredField1,requiredField2,etcFields]) , we are populating because we also need the data from the User Collection, So this populate() method , takes two arguments , first is the FieldName which id linked with other collection(User) and second argument is a array , inside the array we can mention what fields we need  from the user collection, like if we need the ["firstName" and "lastName"], ,So let's use this populate method ,like below;-
+const connectionRequests = await ConnectionRequest.find({
+  toUserId: loggedInUser._id,
+  status: "interested",
+}).populate("fromUserId", ["firstName", "lastName"]);
+
+//* and now we can send this data to the user's as it will also contain the firstName and lastName of the user.
+//* and don't forget to import and use userRouter inside app.js .
+//* so now our show connection request api(/user/requests/received) api is looking like below:-
+
+userRouter.get("/user/requests/received", userAuth, async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+
+    const connectionRequests = await ConnectionRequest.find({
+      toUserId: loggedInUser._id,
+      status: "interested",
+    }).populate("fromUserId", ["firstName", "lastName"]); //* returns an array of connection Requests, only finding the request where is toUserId is same as loggedInUser's id to ensure the request is sent to the the loggedInUser,and status is interested , either it will also give the requests with ignored statuses. [about populate method:- the find method would only return the user userId of the sender , but we also wanted the the sender's profile data like first name and lastName to show the user who is sending the request , so we linked two collections userCollection and connection request collection , by getting the reference of the User collection in the fromUserId field present inside connectionRequests schema, using ref:"User", now both are connected, now when we are using the populate method, we are also fetching the data from User collection related the fromUserId, so the first arg is linked field with the User collection and second arg is an array with all the fields we need from the User collection matching with same fromUserId = _id in User collection]
+
+    if (connectionRequests.length === 0) {
+      //* early return when no connection request is found
+      return res.json({
+        message: "No new connection requests found",
+      });
+    }
+
+    res.json({
+      message: "Data fetched successfully",
+      data: connectionRequests,
+    });
+
+    //* when connection requests exist
+  } catch (err) {
+    res.status(400).send("Something went wong:-" + err.message);
+  }
+});
