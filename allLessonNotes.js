@@ -1535,7 +1535,6 @@ const existingConnectionRequest = await ConnectionRequest.findOne({
     { fromUserId: toUserId, toUserId: fromUserId }, //* if receiver already sent to sender previously now sender is also trying to send receiver
   ],
 });
-
 //* if connection request exist with ignore status then user want to change it to interested , so updating the request status to "interested"
 if (
   existingConnectionRequest &&
@@ -1553,8 +1552,8 @@ if (
 
 //* if connection request exist (with interested status) but  user want to cancel it then update the request with ignored status
 if (
-  existingConnectionRequest &&
-  existingConnectionRequest.status === "interested" &&
+  (existingConnectionRequest &&
+    existingConnectionRequest.status === "interested") ||
   status === "ignored"
 ) {
   existingConnectionRequest.status = "ignored";
@@ -1565,8 +1564,27 @@ if (
     data: data,
   });
 }
+
+//* if a connection request already exist and accepted/rejected
+if (
+  existingConnectionRequest &&
+  (existingConnectionRequest.status === "accepted" ||
+    existingConnectionRequest.status === "rejected")
+) {
+  return res.json({
+    message:
+      existingConnectionRequest.status === "accepted"
+        ? "You are already friends"
+        : "Your connection request was rejected",
+    data: existingConnectionRequest,
+  });
+}
 //* if connection request exist (with interested status) but user sent again request with interested status or if previously ignored but again the user want to ignore sending reding response that already connection request exist or already ignored the profile.
-if (existingConnectionRequest) {
+if (
+  existingConnectionRequest &&
+  (existingConnectionRequest.status === "interested" ||
+    existingConnectionRequest.status === "ignored")
+) {
   //*early return as connection already exist
   return res.json({
     message:
@@ -1686,7 +1704,7 @@ connectionRequestRouter.post(
 /*
  * fromUserId: {
  *    type: mongoose.Schema.Types.ObjectId,
- *    ref: "User", //*reference to the User collection
+ *    ref: "User", //*reference to the User model
  *    required: true,
  *  }
  */
@@ -1708,7 +1726,7 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     const connectionRequests = await ConnectionRequest.find({
       toUserId: loggedInUser._id,
       status: "interested",
-    }).populate("fromUserId", ["firstName", "lastName"]); //* returns an array of connection Requests, only finding the request where is toUserId is same as loggedInUser's id to ensure the request is sent to the the loggedInUser,and status is interested , either it will also give the requests with ignored statuses. [about populate method:- the find method would only return the user userId of the sender , but we also wanted the the sender's profile data like first name and lastName to show the user who is sending the request , so we linked two collections userCollection and connection request collection , by getting the reference of the User collection in the fromUserId field present inside connectionRequests schema, using ref:"User", now both are connected, now when we are using the populate method, we are also fetching the data from User collection related the fromUserId, so the first arg is linked field with the User collection and second arg is an array with all the fields we need from the User collection matching with same fromUserId = _id in User collection]
+    }).populate("fromUserId", ["firstName", "lastName"]); //* returns an array of connection Requests, only finding the request where is toUserId is same as loggedInUser's id to ensure the request is sent to the the loggedInUser,and status is interested , either it will also give the requests with ignored statuses. [about populate method:- the find method would only return the user userId of the sender , but we also wanted the the sender's profile data like first name and lastName to show the user who is sending the request , so we linked two collections userCollection and connection request collection , by getting the reference of the User collection in the fromUserId field present inside connectionRequests schema, using ref:"User", now both are connected, now when we are using the populate method, we are also fetching the data from User collection related the fromUserId, so the first arg is linked field with the User collection and second arg is an array with all the fields we need from the User collection matching with same fromUserId = _id in User collection.So previously we were only getting the fromUserId as id but after populating now fromUserId will be a object which will contain  the id, firstName,lastName  and other mentioned fields in the array, but it will not fetch any field which is not mentioned like pass word, createdAt, because we don't want to over fetch data which is not required.]
 
     if (connectionRequests.length === 0) {
       //* early return when no connection request is found
@@ -1727,3 +1745,71 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     res.status(400).send("Something went wong:-" + err.message);
   }
 });
+
+//! Be aware over-fetching data when we are populating data using .populate method
+//* when we call the populate() , while finding docs , as first arg we write the the field using which we have referenced the other collection, and as second arg , we can pass which fields we need from the other collection's doc , like firstName,lastName. We can write it inside an array like- ["firstName","lastName"] , or inside a string separated with spaces like "firstName lastName  about" .but if we don't mention the second param while calling populate then it will give the whole document data from the other collection, like password , email, createdAt, everything , and we don't need to send these details, and that's why while making get api we should always keep in mind that we never over-fetch data , so we should always explicitly mention what data what fields data we need and we should never over fetch data, if we over fetch then it can be give attackers opportunity to steal data, so always we should manually mention the the allowed fields while populating data.
+
+//! /user/connections api
+//* let's also make this connections api , inside userRouter present inside routes/user.js.first we will use the userAuth middleware to verify the token then inside the route handler we will get the loggedInUser from req.user as we saved the user while validating inside the userAuth, now we will create a constant named USER_SAFE_DATA, and here we will write the all of the fields name which we want to get while populating, we will write it inside a string  separated with spaces .
+//* now using the ConnectionRequest model ,we call .find method and query the the docs/connectionRequests where where either the sender is loggedInUser and the status is accepted or the receiver is loggedInUser and status is accepted, so to write this query we will write or:[] and write the query like below:-
+/*
+ * $or: [
+ *        { fromUserId: loggedInUser._id, status: "accepted" },
+ *        { toUserId: loggedInUser._id, status: "accepted" },
+ *      ],
+ */
+//* and then use populate() to get more info about the connections from the User collection, so first arg will be fromUserId as it has the reference of the User collection and second arg is USER_SAFE_DATA, like this:-
+const USER_SAFE_DATA = "firstName lastName about age gender skills photoUrl";
+
+const connections = await ConnectionRequest.find({
+  $or: [
+    { fromUserId: loggedInUser._id, status: "accepted" },
+    { toUserId: loggedInUser._id, status: "accepted" },
+  ],
+}).populate("fromUserId", USER_SAFE_DATA);
+
+//* now if now connection exist we will do a early return
+
+//* when connection requests exist
+//* the connection data will be array of objects , which has data of every connection request related to the loggedInUser and accepted status, so it also contains the data of connectionRequest id , created at , toUserId (loggedInUser), so this is unnecessary data , we just need the data of the fromUserId , which has all the data of the connection/friend, so we can iterate the connections array and only save the data of the fromUserId.like below:-
+const data = connections.map((connection) => connection.fromUserId);
+
+//* then send the response back to the user like below:-
+/*
+* userRouter.get("/user/connections", userAuth, async (req, res) => {
+*   try {
+*     const loggedInUser = req.user;
+* 
+*     const USER_SAFE_DATA =
+*       "firstName lastName about age gender skills photoUrl";
+* 
+*     const connections = await ConnectionRequest.find({
+*       $or: [
+*         { fromUserId: loggedInUser._id, status: "accepted" },
+*         { toUserId: loggedInUser._id, status: "accepted" },
+*       ],
+*     }).populate("fromUserId", USER_SAFE_DATA); //* it will only fetch the * requests where fromUserId is same as loggedInUser's id  and status is accepted * or the loggedInUser sent request to some user and also the status is only * accepted now,to make sure request is sent to loggedInUser or received by the * loggedInUSer, so the requests with other statuses are not fetched. How * populate() method works mentioned in the above api, and notes.
+* 
+*     if (connections.length === 0) {
+*       //* early return when no connection request is found
+*       return res.json({
+*         message: "No connections found",
+*       });
+*     }
+* 
+*     //* when connection requests exist
+*     //* the connection data will be array of objects , which has data of every * connection request related to the loggedInUser and accepted status, so it also * contains the data of connectionRequest id , created at , toUserId * (loggedInUser), so this is unnecessary data , we just need the data of the * fromUserId , which has all the data of the connection/friend, so we can iterate * the connections array and only save the data of the fromUserId.
+*     const data = connections.map((connection) => connection.fromUserId);
+* 
+*     //* sending back response
+*     res.json({
+*       message: "Data fetched successfully",
+*       data: data,
+*     });
+*   } catch (err) {
+*     res.status(400).send("Something went wong:-" + err.message);
+*   }
+* });
+
+*/
+//* solve the bug
