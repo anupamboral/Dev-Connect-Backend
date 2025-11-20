@@ -49,7 +49,9 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
         { fromUserId: loggedInUser._id, status: "accepted" },
         { toUserId: loggedInUser._id, status: "accepted" },
       ],
-    }).populate("fromUserId", USER_SAFE_DATA); //* it will only fetch the requests where fromUserId is same as loggedInUser's id  and status is accepted or the loggedInUser sent request to some user and also the status is only accepted now,to make sure request is sent to loggedInUser or received by the loggedInUSer, so the requests with other statuses are not fetched. How populate() method works mentioned in the above api, and notes.
+    })
+      .populate("fromUserId", USER_SAFE_DATA)
+      .populate("toUserId", USER_SAFE_DATA); //* it will only fetch the requests where fromUserId  is same as loggedInUser's id  and status is accepted or the loggedInUser sent request to some user and also the status is only accepted now,to make sure request is sent to loggedInUser or received by the loggedInUSer, so the requests with other statuses are not fetched.So we have to populate() twice,once using fromUserId and second time using toUserId,because whatever connection requests we will get , in some connection loggedInUser will be the sender/fromUserId so in that case we would need the toUserId/receiver details, and in connection loggedInUser will be the receiver/toUserId so in that case we would need the fromUserId, so we will chain two populate methods one after another, first we will populate using fromUserId then populate using ToUserId,    so first arg will be fromUserId for first populate method then for second populate toUserId will be first arg, as it has the reference of the User collection and second arg for both populate will be USER_SAFE_DATA. How populate() method works mentioned in the above api, and notes.
 
     if (connections.length === 0) {
       //* early return when no connection request is found
@@ -59,8 +61,15 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
     }
 
     //* when connection requests exist
-    //* the connection data will be array of objects , which has data of every connection request related to the loggedInUser and accepted status, so it also contains the data of connectionRequest id , created at , toUserId (loggedInUser), so this is unnecessary data , we just need the data of the fromUserId , which has all the data of the connection/friend, so we can iterate the connections array and only save the data of the fromUserId.
-    const data = connections.map((connection) => connection.fromUserId);
+    //* the connection data will be array of objects , which has data of every connection request related to the loggedInUser and accepted status, so it also contains the data of connectionRequest id , created at , toUserId (loggedInUser), so this is unnecessary data , we just need the data of the fromUserId  when loggedInUser is receiver/toUserId and toUserId when logged in user is sender/fromUserId, these have all data of the connection/friend, so we can iterate the connections array and only save the data of the fromUserId when loggedInUser's id is toUserId and toUserId when loggedInUser's id is fromUserId.
+    const data = connections.map((connection) => {
+      //* returning toUserId data when loggedInUser's id is fromUserId
+      if (connection.fromUserId._id.equals(loggedInUser._id)) {
+        return connection.toUserId;
+      }
+      //* returning fromUserId data when loggedInUser's id is toUserId
+      return connection.fromUserId;
+    });
 
     //* sending back response
     res.json({
