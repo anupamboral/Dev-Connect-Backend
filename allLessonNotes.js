@@ -1853,3 +1853,14 @@ const data2 = connections.map((connection) => {
 * });
 
 */
+//! Season 2 - Episode - 14 - Building feed api and pagination
+//! /user/feed api
+//* in the feed of the loggedInUser we should not show any other connection with interested,ignored,accepted,rejected status, and also not show the loggedInUser to himself, we should only show the new people in the feed of anu loggedInUser. So we will find all user's where either the loggedInUser's Id is same as fromUserId or toUserId from the ConnectionRequest Model and the we will use select("field1 field2") method to only save the required fields into the connection Requests. So we can find all the friends(accepted status, who sent or received and accepted) , an also who rejected or ignored loggedInUser's profile.Like below:-
+
+const connectionRequest = await ConnectionRequest.find({
+  $or: [{ toUserId: loggedInUser._id }, { fromUserId: loggedInUser._id }],
+}).select("fromUserId toUserId"); //!select() method if we have a object or arrays of objects and we don't need of the fields inside the object, then we use this select method which takes only one arg which is a string where we have to write on;y required field names separated with spaces, and it will return the object or objects with required fields mention in the args of the select method.
+
+//*  Then we will create a new Set() and assign it as a value of a constant named hiddenProfiles ,Remember a set always saves only unique values, no duplicate values, and then using the forEach method we will loop the all the connections we found and add then inside the set we will add all the fromUserIds and toUserIds, so it will included both the loggedInUser and also the user's who are connected(interested , ignored, accepted,rejected) , the we will write a query using the User model using .find() method. and inside this we will write the logic that except the hiddenUserFromFeed profiles and loggedInUser profile fetch all the other users profile. To write that we will use $and:[] operator to write and query, and $nin to write not in the array query and $ne to write not equal  to query, and also we will use Array.from() method to convert the  set to array., and finally save the response into a constant name visibleFeedUsers then send back response to the client.
+
+//* write further comments inside the api and in above comment with explanations with reference links.
