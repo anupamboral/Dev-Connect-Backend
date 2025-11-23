@@ -10,7 +10,7 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
   //* in userAuth after validation we saved the user in the req.user
   const user = req.user;
 
-  res.send(user);
+  res.json({ data: user });
 });
 //* api to edit profile details
 profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
@@ -37,7 +37,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
       data: loggedInUser,
     });
   } catch (err) {
-    res.status(400).send("Something went wrong:-" + err.message);
+    res.status(400).json({ message: "something went wrong:- " + err.message });
   }
 });
 //*api to change the password(apiArgs "emailId","oldPassword","newPassword" isn json format)
@@ -73,9 +73,9 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
     //* saving the user into db
     user.save();
     //* sending response
-    res.send("password updated successfully");
+    res.json({ message: "password updated successfully" });
   } catch (err) {
-    res.status(400).send("Something went wrong:-" + err.message);
+    res.status(400).json({ message: "something went wrong:- " + err.message });
   }
 });
 module.exports = profileRouter;

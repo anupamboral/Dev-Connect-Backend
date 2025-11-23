@@ -5,6 +5,7 @@ const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
 
 const USER_SAFE_DATA = "firstName lastName about age gender skills photoUrl";
+//* incoming requests viewing api
 userRouter.get("/user/requests/received", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
@@ -36,10 +37,10 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
 
     //* when connection requests exist
   } catch (err) {
-    res.status(400).send("Something went wong:-" + err.message);
+    res.status(400).json({ message: "something went wrong:- " + err.message });
   }
 });
-
+//* accepted connections/friends viewing api
 userRouter.get("/user/connections", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
@@ -77,10 +78,10 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
       data: data,
     });
   } catch (err) {
-    res.status(400).send("Something went wong:-" + err.message);
+    res.status(400).json({ message: "something went wrong:- " + err.message });
   }
 });
-
+//* user feed api
 userRouter.get("/user/feed", userAuth, async (req, res) => {
   try {
     //* implementation of pagination
@@ -124,8 +125,8 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
       data: visibleFeedUsers,
     });
   } catch (err) {
-    console.log(err);
-    res.status(400).send("something went wrong:- " + err.message);
+    // console.log(err);
+    res.status(400).json({ message: "something went wrong:- " + err.message });
   }
 });
 module.exports = userRouter;

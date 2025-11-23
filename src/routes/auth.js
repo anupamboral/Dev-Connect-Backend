@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const authRouter = express.Router();
 //* importing the User model
 const User = require("../models/user");
+//*sign up api
 authRouter.post("/signup", async (req, res) => {
   try {
     //*validation of data
@@ -26,12 +27,15 @@ authRouter.post("/signup", async (req, res) => {
     //! saving the user instance inside the database using .save() method
     await user.save();
     //! sending response to the client
-    res.send("User added successfully");
+    res.json({ message: "User added successfully" });
   } catch (err) {
     //! catching errors and sending error message
-    res.status(400).send(`Error saving the user:- ${err.message}`);
+    res
+      .status(400)
+      .json({ message: "Error saving the error:- " + err.message });
   } //* status code 400 represents bad request , and we are using it here because we are sending request to the server to save the user data and if the request fails then we can use to 400 status code as it represents bad request.
 });
+//* sign in api
 authRouter.post("/signin", async (req, res) => {
   try {
     //* validating email format
@@ -58,19 +62,20 @@ authRouter.post("/signin", async (req, res) => {
       res.cookie("token", token, {
         expires: new Date(Date.now() + 7 * 24 * 3600000 + 3600000 * 5.5),
       }); //* so cookie will be removed after 7 days}); //* sending the cookie to the client ,it's first argument is "name" so here we can write "token" as we are sending the token using the cookie, and as the second argument pass the value of the token, we can also mention a third value which is options, but this third value is optional
-      res.send("Logged In successfully");
+      res.json({ message: "Logged In successfully" });
     } else {
       //* if password mismatch then throwing error
       throw new Error("Invalid credentials");
     }
   } catch (err) {
-    res.status(400).send("Something went wrong:-" + err.message);
+    res.status(400).json({ message: "something went wrong:- " + err.message });
   }
 });
+//* logout api
 authRouter.post("/logout", (req, res) => {
   //* setting the token to null and immediately expiring cookies
   res.cookie("token", null, { expires: new Date(Date.now()) });
 
-  res.send("Logged out successfully");
+  res.json({ message: "Logged out successfully" });
 });
 module.exports = authRouter;

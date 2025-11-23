@@ -2,9 +2,10 @@ const express = require("express");
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
-const e = require("express");
+const express = require("express");
 
 const connectionRequestRouter = express.Router();
+//* connectionRequest sending api
 connectionRequestRouter.post(
   "/request/send/:status/:userId",
   userAuth,
@@ -118,11 +119,14 @@ connectionRequestRouter.post(
       });
     } catch (err) {
       //! catching errors and sending error message
-      console.log(err);
-      res.status(400).send(`Something went wrong:- ${err.message}`);
+      // console.log(err);
+      res
+        .status(400)
+        .json({ message: "something went wrong:- " + err.message });
     }
   }
 );
+//* connectionRequest reviewing api
 connectionRequestRouter.post(
   "/request/review/:status/:connectionRequestId",
   userAuth,
@@ -160,7 +164,9 @@ connectionRequestRouter.post(
         data: data,
       });
     } catch (err) {
-      res.status(400).send("something went wrong:-" + err.message);
+      res
+        .status(400)
+        .json({ message: "something went wrong:- " + err.message });
     }
   }
 );

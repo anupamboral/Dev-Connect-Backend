@@ -1950,3 +1950,5 @@ const visibleFeedUserss = await User.find({
   .select(USER_SAFE_DATA)
   .skip(skip)
   .limit(limit); //*skip method will skip the number of pages what ever passed inside it, and limit method only give the number of results we pass inside it, like we the user pass page 2 then (2-1)*10=10 , so it will skip first ten pages and if the limit is passed 10 then after skipping first 10 pages because of the skip method it will return 10 docs it will show docs from 11-20.
+
+//* for all api's use .json() because for all api 's response standard should be same so as we are using json format so , always keep same format.also for catch blocks.
