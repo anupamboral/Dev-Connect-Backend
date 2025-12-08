@@ -1952,3 +1952,41 @@ const visibleFeedUserss = await User.find({
   .limit(limit); //*skip method will skip the number of pages what ever passed inside it, and limit method only give the number of results we pass inside it, like we the user pass page 2 then (2-1)*10=10 , so it will skip first ten pages and if the limit is passed 10 then after skipping first 10 pages because of the skip method it will return 10 docs it will show docs from 11-20.
 
 //* for all api's use .json() because for all api 's response standard should be same so as we are using json format so , always keep same format.also for catch blocks.
+
+//!cors issue
+//* as frontend is hosted n different localhost port so, it will throw a cors error so , we have to use this cors middleware to handle that issue , just install cors library using npm i cors and then here ue it as a middleware in app.js, and also mention our frontend url to whitelist it and set credentials to true , to Accept credentials (cookies) sent by the client
+app.use(
+  cors({
+    origin: "http://localhost:5173", //*(Whatever your frontend url is)
+    credentials: true, // *<= Accept credentials (cookies) sent by the client
+  })
+);
+
+//! change in userAuth middleware
+//* in the userAuth middleware present in middleware/auth.js sending the proper message with proper status code
+if (!token) {
+  //* when the token is not valid that means we should send a proper message with status code 401 which means unauthorized credentials
+  return res.status(401).json({ message: "Please login" });
+  // throw new Error("Token is not valid!!");//* this error message was not proper
+}
+
+//! some changes in signup and sign in api
+//* sending the cookie(added at last because we were not sending the token for this sign up api) and in sign in api
+res.cookie("token", token, {
+  expires: new Date(Date.now() + 7 * 24 * 3600000 + 3600000 * 5.5),
+});
+
+/* 
+! below this is not required
+we could also added samesite and secure properties, to  setting the cookie 
+      sameSite: "none", //* Required for cross-site requests(added at last)
+        secure: true, //* Required when sameSite is 'none'(added at last)*/
+
+//! adding env files to secure keys
+//*installing dotenv module :- npm install dotenv
+//* creating a .env file in main directory and writing keys in this this file
+//* then using it is where needed:-
+//* so at the top write require("dotenv").config()
+//* then use it like process.env.KEY_NAME
+//* add .env into .gitignore file
+//* we did it for ,jwt key , db key , port number

@@ -47,7 +47,7 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
     //* if the user is valid we have saved the user into req,user, so it;s the user instance
     const user = req.user;
     //* user entered dat for changing the password
-    console.log(req.body);
+    // console.log(req.body);
     const { emailId, oldPassword, newPassword } = req.body;
 
     //* checking if the emailId is correct or not

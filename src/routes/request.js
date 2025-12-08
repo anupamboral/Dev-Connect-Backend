@@ -2,7 +2,6 @@ const express = require("express");
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
-const express = require("express");
 
 const connectionRequestRouter = express.Router();
 //* connectionRequest sending api
@@ -15,7 +14,7 @@ connectionRequestRouter.post(
       const fromUserId = user._id;
       const toUserId = req.params.userId;
       const status = req.params.status;
-      console.log(status);
+      // console.log(status);
       const allowedStatuses = ["interested", "ignored"];
       if (!allowedStatuses.includes(status)) {
         //* writing return is important , while sending the response from here , if we don't write return then the code execution will move further , so always write return if you are sending response early, or you can just throw an error rather than sending response.
@@ -38,7 +37,7 @@ connectionRequestRouter.post(
       }); //* So before making the instance and after the allowedStatus check we will , check if the connection request already exist in our db fromUser to toUser or toUser to fromUser ( for example if msdhoni already sent request to omswami ji or om swami sent request to ms dhoni , in both cases we will restrict the user to send a new connection request).
       //* So using the findOne() method we will try to find if there is an existing request present in the db which is either sent fromUserId to toUserId(sender to receiver) or toUserId to fromUserId(receiver to sender).To do it we have to know how to write Or condition.It is mongo db thing. To write thing inside the method , as usual we will write a object, inside the object as usual we write the condition, but to write or condition we will wite $or:[], inside this array we will write two objects , one for each condition, so it will be a array of objects.
 
-      console.log(status);
+      // console.log(status);
       //* if connection request exist with ignore status then user want to change it to interested , so updating the request status to "interested"
       if (
         existingConnectionRequest &&
@@ -105,7 +104,7 @@ connectionRequestRouter.post(
         toUserId,
         status,
       });
-      console.log(connectionRequest);
+      // console.log(connectionRequest);
       //* saving data into db(always use await as it returns promise)
       const data = await connectionRequest.save();
 

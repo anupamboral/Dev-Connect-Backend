@@ -1,3 +1,4 @@
+require("dotenv").config();
 //* remember in one of the previous videos we created a cluster inside mongodb atlas. and from the mongodb compass app we connected to the cluster using the connection string , then created a collection and then created documents inside that collection from our code.
 //* now we have to connect this express application to our cluster
 //* now first of all we to create a config folder , so we will create a config folder inside our src folder, so whatever configuration we need to do inside our application we will do inside it.Inside it we will create a file named to database.js to write the logic of connecting to our database.To connect to our database we will be using a important npm library named "Mongoose".
@@ -14,9 +15,7 @@ const mongoose = require("mongoose");
 
 const connectDb = async () => {
   //* it is connecting to the namaste node cluster, if we want to connect to database then at last after the / we have to mention the database name - devConnect.
-  await mongoose.connect(
-    "mongodb+srv://anupamboral:KYExuJH0QyiEI6kg@namastenode.cw4mdf8.mongodb.net/devConnect"
-  ); //* from mongo compass or our cluster we can copy the connection string
+  await mongoose.connect(process.env.DB_CONNECTION_SECRET); //* from mongo compass or our cluster we can copy the connection string
 };
 
 //* now we can call the connectDB() and it will return us a promise so we can handler the it using .then() for successful connection and .catch() for some error

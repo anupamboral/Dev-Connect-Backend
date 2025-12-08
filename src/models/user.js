@@ -5,6 +5,8 @@ const jwt = require("jsonwebtoken");
 //* requiring bcrypt library after installing
 const bcrypt = require("bcrypt");
 //* to create  schema we have to call a method on mongoose named mongoose.Schema({}), inside that we can write a object where we can write the schema for our users, for each field we have to define the type of the value of each field/ property inside a object.
+require("dotenv").config();//*importing env file
+
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -83,7 +85,7 @@ const userSchema = new mongoose.Schema(
 //* method to generate the JWT(token) and return it.
 userSchema.methods.getJWT = function () {
   const user = this;
-  const token = jwt.sign({ _id: user._id }, "dev@666Connect", {
+  const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   }); //*1st param secret data,2nd param secret password , 3rd param a object where we can mention the expiry time of the token here we mentioned 7 days
   // console.log(token);

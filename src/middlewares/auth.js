@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-
+require("dotenv").config();
 //* commented as not needed.
 /*const adminAuth = (req, res, next) => {
   //* admin auth checking
@@ -31,9 +31,11 @@ const userAuth = async (req, res, next) => {
   try {
     const { token } = req.cookies;
     if (!token) {
-      throw new Error("Token is not valid!!");
+      //* when the token is not valid that means we should send a proper message with status code 401 which means unauthorized credentials
+      return res.status(401).json({ message: "Please login" });
+      // throw new Error("Token is not valid!!");//* this error message was not proper
     }
-    const decodedObj = jwt.verify(token, "dev@666Connect"); //* first param received token , second param secret password.It does not return promise so we don't need to write await.
+    const decodedObj = jwt.verify(token, process.env.JWT_SECRET); //* first param received token , second param secret password.It does not return promise so we don't need to write await.
     const { _id } = decodedObj;
 
     const user = await User.findById(_id);
@@ -46,7 +48,7 @@ const userAuth = async (req, res, next) => {
     //* if any error happen then immediately catch block will be executed and below next() will not be called so next request handler wil not be executed
     next(); //*it will move the execution to the next request handler
   } catch (err) {
-    res.status(400).send("something went wrong:-" + err.message);
+    res.status(400).json({ message: "something went wrong:-" + err.message });
   }
 };
 
