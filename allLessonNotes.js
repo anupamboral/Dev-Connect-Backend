@@ -1991,5 +1991,54 @@ we could also added samesite and secure properties, to  setting the cookie
 //* add .env into .gitignore file
 //* we did it for ,jwt key , db key , port number
 
-//* for vercel hosting we added vercel.json, and a "require('dotenv').config({ quiet: true });" in app.js
+//! for vercel hosting we added vercel.json(as app.js loacted in src folder so the we configured the url according to it), and a "require('dotenv').config({ quiet: true });" in app.js
+//* vercel.json.file looks like below:-
+/*{
+  "builds": [
+    {
+      "src": "src/app.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/src/app.js"
+    }
+  ]
+}
+*/
+//*otherwise it would like like below if the app.js file would be loacted at the root level:-
+/*{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/app.js"
+    }
+  ]
+}*/
+//* and as the vercel automatically listen for the requests so, we don't need app.listen(3000) in the app.js file,so we written a condition , which will call this app.listen in only development mode, and to make it work in vercel we have to export the app instance so we also exported the app instance in app.js file like below:-
+/*
+ connectDb()
+  .then(() => {
+    console.log("successfully connected to the database cluster");
+!    if (process.env.NODE_ENV !== "production") {
+ *     app.listen(3000, () => {
+ *       console.log("server is listening successfully on port 3000");
+      });
+    } //* using the listen method we listening to the incoming requests on port number 3000, the first parameter of this listen method is the port number , now there is second parameter which is a callback function, and this will be called when our server is up and running.
+    !if(process.env.NODE_ENV !== 'production')  condition is written to only make it work for development mode , for production vercel handles it, so we exported the app instance at the below portion
+  })
+  .catch((err) => {
+    console.error("cannot connect to the database:-" + err.message);
+  });
+
+module.exports = app; */ //* important for vercel
 //* vercel hosting example youtube video link- https://www.youtube.com/watch?v=KuMbhQ4CLQ8
