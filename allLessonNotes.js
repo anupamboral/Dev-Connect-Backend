@@ -2042,3 +2042,10 @@ we could also added samesite and secure properties, to  setting the cookie
 
 module.exports = app; */ //* important for vercel
 //* vercel hosting example youtube video link- https://www.youtube.com/watch?v=KuMbhQ4CLQ8
+
+//! cookie sending code change. to work in all devices ,for strict cors in sign in and sign up api
+res.cookie("token", token, {
+  expires: new Date(Date.now() + 7 * 24 * 3600000 + 3600000 * 5.5),
+  secure: true, // MUST be true for SameSite=None to work
+  sameSite: "None", // Allows cross-site sending
+});
