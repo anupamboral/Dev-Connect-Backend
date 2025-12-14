@@ -28,10 +28,10 @@ app.use(cookieParser());
 //* as frontend is hosted n different localhost port so, it will throw a cors error so , we have to use this cors middleware to handle that issue , just install cors library using npm i cors and then here ue it as a middleware in app.js
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://x4r69l6j-5173.inc1.devtunnels.ms",
-    ], //*(Whatever your frontend url is)
+    // origin: [
+    //   "http://localhost:5173",
+    //   "https://x4r69l6j-5173.inc1.devtunnels.ms",
+    // ], //*(Whatever your frontend url is)
     credentials: true, // *<= Accept credentials (cookies) sent by the client
   })
 );

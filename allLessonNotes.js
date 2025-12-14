@@ -1991,7 +1991,7 @@ we could also added samesite and secure properties, to  setting the cookie
 //* add .env into .gitignore file
 //* we did it for ,jwt key , db key , port number
 
-//! for vercel hosting we added vercel.json(as app.js loacted in src folder so the we configured the url according to it), and a "require('dotenv').config({ quiet: true });" in app.js
+//! for vercel hosting we added vercel.json(as app.js located in src folder so the we configured the url according to it), and a "require('dotenv').config({ quiet: true });" in app.js
 //* vercel.json.file looks like below:-
 /*{
   "builds": [
