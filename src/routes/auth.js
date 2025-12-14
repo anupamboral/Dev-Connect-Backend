@@ -48,6 +48,8 @@ authRouter.post("/signup", async (req, res) => {
     //* sending the cookie(added at last because we were not sending the token for this sign up api)
     res.cookie("token", token, {
       expires: new Date(Date.now() + 7 * 24 * 3600000 + 3600000 * 5.5),
+      secure: true, // MUST be true for SameSite=None to work
+      sameSite: "None", // Allows cross-site sending
     });
     //! sending response to the client
     res.json({ message: "User added successfully", data: userData });
@@ -84,6 +86,8 @@ authRouter.post("/signin", async (req, res) => {
       //* sending the cookie
       res.cookie("token", token, {
         expires: new Date(Date.now() + 7 * 24 * 3600000 + 3600000 * 5.5),
+        secure: true, // MUST be true for SameSite=None to work
+        sameSite: "None", // Allows cross-site sending
       }); //* so cookie will be removed after 7 days}); //* sending the cookie to the client ,it's first argument is "name" so here we can write "token" as we are sending the token using the cookie, and as the second argument pass the value of the token, we can also mention a third value which is options, but this third value is optional
 
       res.json({
