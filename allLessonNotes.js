@@ -1992,3 +1992,4 @@ we could also added samesite and secure properties, to  setting the cookie
 //* we did it for ,jwt key , db key , port number
 
 //* for vercel hosting we added vercel.json, and a "require('dotenv').config({ quiet: true });" in app.js
+//* vercel hosting example youtube video link- https://www.youtube.com/watch?v=KuMbhQ4CLQ8
