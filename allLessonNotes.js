@@ -1990,3 +1990,5 @@ we could also added samesite and secure properties, to  setting the cookie
 //* then use it like process.env.KEY_NAME
 //* add .env into .gitignore file
 //* we did it for ,jwt key , db key , port number
+
+//* for vercel hosting we added vercel.json, and a "require('dotenv').config({ quiet: true });" in app.js

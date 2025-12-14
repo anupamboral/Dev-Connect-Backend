@@ -10,7 +10,7 @@ require("dotenv").config();
 const cookieParser = require("cookie-parser");
 //* for solving cors issue in the frontend using cors library
 const cors = require("cors");
-
+require("dotenv").config({ quiet: true }); //* for vercel hosting
 //* importing the routers
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
