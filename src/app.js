@@ -14,6 +14,7 @@ require("dotenv").config({ quiet: true }); //* for vercel hosting
 //* importing the routers
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
+const paymentRouter = require("./routes/payment");
 const connectionRequestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
 const port = process.env.PORT || 3000;
@@ -46,6 +47,7 @@ app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", connectionRequestRouter);
 app.use("/", userRouter);
+app.use("/", paymentRouter);
 app.get("/", (req, res) => {
   res.json({ message: "Hello from Express on Vercel!" });
 });

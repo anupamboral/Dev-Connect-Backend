@@ -2051,4 +2051,181 @@ res.cookie("token", token, {
 });
 
 //!Razorpay payment system building
+//*then we will go to razorpay doc page. here:-https://razorpay.com/docs/payments/server-integration/nodejs/
+
+//* here they mentioned we have to first install razorpay package in the backend using command - npm i razorpay
 //* we will create a payment.js route in side routes folder and create create a route and export it.and then create a api named /payment/create post api.
+//* the here in this page they page integration steps:-https://razorpay.com/docs/payments/server-integration/nodejs/integration-steps/
+//*1. Instantiate Razorpay :- inside the utils folder we will create a razorpay .js config file, and there we will write this code:-
+/*const instance= require("razorpay")
+var instance = new Razorpay({
+  key_id: 'YOUR_KEY_ID',
+  key_secret: 'YOUR_KEY_SECRET',
+});
+module.exports = instance;
+*/
+//* we get the keys from accounts and setting in razorpay
+//* now we will go to payment.js import this instance and then create an order inside the api, and save that to database and send the response to ui, ,so to save the order in db we created a a schema inside model/payments.js like below:-
+
+/*const mongoose = require("mongoose");
+
+const paymentSchema = new mongoose.Schema(
+  {
+    orderId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+    },
+    currency: {
+      type: String,
+      default: "INR",
+    },
+    receipt: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      required: true,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    paymentId: {
+      type: String,
+      sparse: true,
+    },
+
+    notes: {
+      firstName: {
+        type: String,
+      },
+      lastName: {
+        type: String,
+      },
+      membershipType: {
+        type: String,
+      },
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("Payment", paymentSchema);
+*/
+//* and the payment api will look like below in routes/payments.js
+/*const express = require("express");
+const razorpayInstance = require("../utils/razorpay");
+const paymentRouter = express.Router();
+const Payment = require("../models/payment");
+const { userAuth } = require("../middlewares/auth");
+
+paymentRouter.post("/payment/create", userAuth, async (req, res) => {
+  try {
+    const { membershipType } = req.body;
+    const { firstName, lastName, emailId } = req.user;
+    //*creating an order
+    const order = await razorpayInstance.orders.create({
+      amount: membershipAmounts[membershipType], //* amount in the smallest currency unit/* this is coming from constants.js file, depending on what membership user chosen in frontend
+      currency: "INR",
+      receipt: "receipt#1",
+      notes: {
+        firstName: firstName,
+        lastName: lastName,
+        emailId: emailId,
+        membershipType: membershipType,
+      },
+    });
+    //*save it in my database
+    const payment = new Payment({
+      userId: req.user._id,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      receipt: order.receipt,
+      status: order.status,
+      notes: order.notes,
+    });
+    const savedPayment = await payment.save();
+    //*send order details to frontend
+    res.json({
+      ...savedPayment.toJSON(),
+    });
+  } catch (err) {
+    res.status(400).json({ message: "something went wrong:-" + err.message });
+  }
+});
+module.exports = paymentRouter;
+*/
+//* in the frontend in premium.jsx we will create a handleBuyClick click function and call on buy gold or silver btn click like below:-
+/*  const handleBuyClick = async (plan) => {
+    const order = await axios.post(
+      BASE_URL + "/payment/create",
+      { membershipType: plan },
+      { withCredentials: true }
+    );
+    console.log(order);
+  }*/
+/*      <button
+                onClick={() => {
+*                  handleBuyClick("silver");
+                }}
+                className="btn btn-primary btn-block"      Buy silver
+              </button>
+              >*/
+
+/*
+<button
+                onClick={() => {
+*                  handleBuyClick("gold");
+                }}
+                className="btn btn-secondary btn-block"
+              >
+                Buy Gold
+              </button>*/
+
+//* in the frontend index.html we have to add this script
+//*  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>,this will access to the razorpay object using window.Razorpay that we will need after some time,
+//* then in the frontend handleBuyClick function after getting the order from backend we will call the razorpay checkout method to open the razorpay payment window like below:-const handleBuyClick = async (plan) => {
+/*
+  const handleBuyClick = async (plan) => {
+    const order = await axios.post(
+      BASE_URL + "/payment/create",
+      { membershipType: plan },
+      { withCredentials: true }
+    );
+    console.log(order);
+
+    //* opening payment diallage box 
+    const { amount, currency, keyId, notes, orderId } = order.data;
+    const options = {
+      key: keyId, // Replace with your Razorpay key_id
+      amount: amount, // Amount is in currency subunits.
+      currency: currency,
+      name: "Dev Connect",
+      description: "Test Transaction",
+      order_id: orderId, // This is the order_id created in the backend
+      prefill: {
+        name: notes.firstName + " " + notes.lastName,
+        email: notes.emailId,
+      },
+      theme: {
+        color: "#0000cc",
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+*/
+//* now we can test the feature of opening the dislodge box;
+
+
+
