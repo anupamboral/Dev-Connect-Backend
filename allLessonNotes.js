@@ -2049,3 +2049,6 @@ res.cookie("token", token, {
   secure: true, // MUST be true for SameSite=None to work
   sameSite: "None", // Allows cross-site sending
 });
+
+//!Razorpay payment system building
+//* we will create a payment.js route in side routes folder and create create a route and export it.and then create a api named /payment/create post api.

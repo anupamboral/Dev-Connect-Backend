@@ -16,6 +16,7 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const connectionRequestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
+const port = process.env.PORT || 3000;
 
 //! importance of express.json() middleware.
 //* so to convert the json to js object , we will use a middleware given to us by express.js. and that's express.json(). this middleware can take the json from the req.body then convert that to js object then again put that inside the req.body and we can then easily access it form the request body.
@@ -52,15 +53,15 @@ app.get("/", (req, res) => {
 connectDb()
   .then(() => {
     console.log("successfully connected to the database cluster");
-    if (process.env.NODE_ENV !== "production") {
-      app.listen(3000, () => {
-        console.log("server is listening successfully on port 3000");
-      });
-    } //* using the listen method we listening to the incoming requests on port number 3000, the first parameter of this listen method is the port number , now there is second parameter which is a callback function, and this will be called when our server is up and running.
+    // if (process.env.NODE_ENV !== "production") {//* needed for vercel not for render
+    app.listen(port, () => {
+      console.log("server is listening successfully on port 3000");
+    });
+    // } //* using the listen method we listening to the incoming requests on port number 3000, the first parameter of this listen method is the port number , now there is second parameter which is a callback function, and this will be called when our server is up and running.
     //!if(process.env.NODE_ENV !== 'production')  condition is written to only make it work for development mode , for production vercel handles it, so we exported the app instance at the below portion
   })
   .catch((err) => {
     console.error("cannot connect to the database:-" + err.message);
   });
 
-module.exports = app; //* important for vercel
+// module.exports = app; //* important for vercel
