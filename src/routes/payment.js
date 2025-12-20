@@ -44,14 +44,15 @@ paymentRouter.post("/payment/create", userAuth, async (req, res) => {
       keyId: process.env.RAZORPAY_KEY_ID,
     });
   } catch (err) {
-    res.status(400).json({ message: "something went wrong:-" + err.message });
+    res.status(500).json({ message: "something went wrong:-" + err.message });
   }
 });
 
 //*webhook to listen to payment status updates from razorpay
 paymentRouter.post("/payment/webhook", async (req, res) => {
   try {
-    const webhookSignature = req.get("x-razorpay-signature"); //* getting the signature sent by razorpay in headers
+    const webhookSignature = req.get("X-Razorpay-Signature"); //* getting the signature sent by razorpay in headers
+    console.log("Webhook signature:", webhookSignature);
 
     //* below function validateWebhookSignature will return true or false
     const isWebhookValid = validateWebhookSignature(
@@ -59,7 +60,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
       webhookSignature,
       process.env.RAZORPAY_WEBHOOK_SECRET
     ); //*first param webhook body, will sent by razorpay in req.body , second param is signature sent by razorpay in headers, third param is our secret key which we have set in env file. if someone tries to send some malicious information to our webhook endpoint then this validateWebhookSignature
-
+    console.log(isWebhookValid);
     //* if webhook is not valid then we will return 400 status code
     if (!isWebhookValid) {
       return res.status(400).json({ message: "Invalid webhook signature" });
@@ -72,7 +73,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
       payment.status = paymentDetails.status; //* updating the payment status
       await payment.save(); //* saving the updated payment
     }
-
+    console.log("payment saved");
     //* updating the user as premium user
     if (paymentDetails.status === "captured") {
       const user = await User.findOne({ _id: payment.userId });
@@ -91,7 +92,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
 //* to verify the membership status from the frontend
 paymentRouter.get("/premium/verify", userAuth, async (req, res) => {
   try {
-    const user = req.user.toJson(); //* toJson() method will give plain js object
+    const user = req.user.toJSON(); //* toJson() method will give plain js object
     //* check if the user is premium user and send the response to frontend
     if (user.isPremiumUser) {
       return res.json({
