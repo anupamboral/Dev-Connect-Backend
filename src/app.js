@@ -33,7 +33,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://x4r69l6j-5173.inc1.devtunnels.ms",
-      "https://transcendent-kangaroo-773c4a.netlify.app",
+      "https://dev-connect1234.netlify.app",
     ], //*(Whatever your frontend url is)
     credentials: true, // *<= Accept credentials (cookies) sent by the client
     allowedHeaders: ["Content-Type", "Authorization"],
