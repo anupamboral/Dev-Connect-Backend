@@ -2381,6 +2381,8 @@ paymentRouter.get("/premium/verify", userAuth, async (req, res) => {
       */
 //* and depending the value of this isPremiumUser state variable we will show premium badge profile page of the user. and also if the user goes to premium section then also he will see that he is a premium user.
 //* and in the premium.jsx page we will also write a useEffect to call this verifyPremiumUser function when the component is mounted for first time so whenever the user is again opening the website later some time this useEffect will be called and it will fetch the premium status i th user is already a premium user  ,  like below:-
-       useEffect(() => {
-    verifyPremiumUser();
-  }, []);//* to run only once on component mount and load the premium status
+useEffect(() => {
+  verifyPremiumUser();
+}, []); //* to run only once on component mount and load the premium status
+
+//! in "/user/requests/received"api and also user safe data constant in user.js we also added isPremiumUser, and membershipStatus , so the frontend can get the premium user status and membership status data , so if the us premium or not , because depending on it we are displaying the blue tick.
