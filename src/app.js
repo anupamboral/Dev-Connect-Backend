@@ -50,7 +50,7 @@ app.use("/", connectionRequestRouter);
 app.use("/", userRouter);
 app.use("/", paymentRouter);
 app.get("/", (req, res) => {
-  res.json({ message: "Hello from Express on Vercel!" });
+  res.json({ message: "Successfully running on render" });
 });
 
 connectDb()
@@ -61,10 +61,10 @@ connectDb()
       console.log("server is listening successfully on port 3000");
     });
     // } //* using the listen method we listening to the incoming requests on port number 3000, the first parameter of this listen method is the port number , now there is second parameter which is a callback function, and this will be called when our server is up and running.
-    //!if(process.env.NODE_ENV !== 'production')  condition is written to only make it work for development mode , for production vercel handles it, so we exported the app instance at the below portion
+    //!this comment is for vercel(but we are now using render for so we can use socket io) - if(process.env.NODE_ENV !== 'production')  condition is written to only make it work for development mode , for production vercel handles it, so we exported the app instance at the below portion
   })
   .catch((err) => {
     console.error("cannot connect to the database:-" + err.message);
   });
 
-// module.exports = app; //* important for vercel
+// module.exports = app; //* important for vercel but not needed for render , as we later shifted to render from vercel
