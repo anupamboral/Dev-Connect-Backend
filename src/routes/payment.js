@@ -51,7 +51,7 @@ paymentRouter.post("/payment/create", userAuth, async (req, res) => {
 //*webhook to listen to payment status updates from razorpay
 paymentRouter.post("/payment/webhook", async (req, res) => {
   try {
-    const webhookSignature = req.get("X-Razorpay-Signature"); //* getting the signature sent by razorpay in headers
+    const webhookSignature = req.headers["X-Razorpay-Signature"];
     console.log("Webhook signature:", webhookSignature);
 
     //* below function validateWebhookSignature will return true or false
@@ -68,19 +68,18 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
     //!updating the payment status in our database
     const paymentDetails = req.body.payload.payment.entity; //* getting payment details from webhook payload.we can see the how req.body looks like in razorpay doc :- https://razorpay.com/docs/webhooks/payments/#payment-authorised
     const payment = await Payment.findOne({ orderId: paymentDetails.order_id }); //* finding the payment in our database using orderId.
-    if (payment) {
-      //* if payment found then we will update the payment status in our database.
-      payment.status = paymentDetails.status; //* updating the payment status
-      await payment.save(); //* saving the updated payment
-    }
+
+    payment.status = paymentDetails.status; //* updating the status
+    payment.paymentId = paymentDetails.id; //* updating the paymentId
+    await payment.save(); //* saving the payment
+
     console.log("payment saved");
     //* updating the user as premium user
-    if (paymentDetails.status === "captured") {
-      const user = await User.findOne({ _id: payment.userId });
-      user.isPremiumUser = true;
-      user.membershipType = payment.notes.membershipType;
-      await user.save();
-    }
+
+    const user = await User.findOne({ _id: payment.userId });
+    user.isPremiumUser = true;
+    user.membershipType = payment.notes.membershipType;
+    await user.save();
 
     //* sending 200 status code to razorpay to acknowledge that we have received the webhook (important step otherwise razorpay will keep sending the webhook again and again)
     res.status(200).json({ message: "Webhook received successfully" });

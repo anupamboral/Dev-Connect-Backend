@@ -32,6 +32,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "http://localhost:8080",
       "https://x4r69l6j-5173.inc1.devtunnels.ms",
       "https://dev-connect1234.netlify.app",
     ], //*(Whatever your frontend url is)
