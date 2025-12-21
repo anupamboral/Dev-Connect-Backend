@@ -51,7 +51,7 @@ paymentRouter.post("/payment/create", userAuth, async (req, res) => {
 //*webhook to listen to payment status updates from razorpay
 paymentRouter.post("/payment/webhook", async (req, res) => {
   try {
-    const webhookSignature = req.headers["X-Razorpay-Signature"];
+    const webhookSignature = req.get("X-Razorpay-Signature");
     console.log("Webhook signature:", webhookSignature);
 
     //* below function validateWebhookSignature will return true or false
@@ -77,6 +77,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
     //* updating the user as premium user
 
     const user = await User.findOne({ _id: payment.userId });
+
     user.isPremiumUser = true;
     user.membershipType = payment.notes.membershipType;
     await user.save();
