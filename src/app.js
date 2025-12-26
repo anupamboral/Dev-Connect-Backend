@@ -11,12 +11,16 @@ const cookieParser = require("cookie-parser");
 //* for solving cors issue in the frontend using cors library
 const cors = require("cors");
 require("dotenv").config({ quiet: true }); //* for vercel hosting
+//* for socket io connection requiring http module
+const http = require("http");
 //* importing the routers
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const paymentRouter = require("./routes/payment");
 const connectionRequestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
+const { getServers } = require("dns");
+const initializeSocket = require("./utils/socket");
 const port = process.env.PORT || 3000;
 
 //! importance of express.json() middleware.
@@ -53,13 +57,21 @@ app.get("/", (req, res) => {
   res.json({ message: "Successfully running on render" });
 });
 
+//*---- socket io configuration
+//* creating a server for socket io connection using the http.createServer() and passing the express app into it.
+const server = http.createServer(app); //* after creating it instead of app.listen() now we will can server.listen()
+//* after creating this initializeSocket function inside utils/sockets.js we imported in app.js and called it with passing the server as argument.
+initializeSocket(server);
+//*then below instead of app.listen() we have to use server.listen()
+//* ---------------
+
 connectDb()
   .then(() => {
     console.log("successfully connected to the database cluster");
     // if (process.env.NODE_ENV !== "production") {//* needed for vercel not for render
-    app.listen(port, () => {
+    server.listen(port, () => {
       console.log("server is listening successfully on port 3000");
-    });
+    }); //! when we created socket io connection we provided app(express app) into http.createServer(app), then only instead of app.listen() we can write server.listen(), if we don't need socket io connection then we can still write app.listen , it will still work but socket will not work.
     // } //* using the listen method we listening to the incoming requests on port number 3000, the first parameter of this listen method is the port number , now there is second parameter which is a callback function, and this will be called when our server is up and running.
     //!this comment is for vercel(but we are now using render for so we can use socket io) - if(process.env.NODE_ENV !== 'production')  condition is written to only make it work for development mode , for production vercel handles it, so we exported the app instance at the below portion
   })
