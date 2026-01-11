@@ -36,7 +36,8 @@ const initializeSocket = (server) => {
   io.use((socket, next) => {
     // Access token sent from client-side 'auth' object
     const authToken = socket.handshake.auth.token;
-    // console.log(token);
+
+    console.log("authToken " + authToken);
     if (!authToken) {
       return next(new Error("Authentication error: Token missing"));
     }
