@@ -21,6 +21,7 @@ const connectionRequestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
 const { getServers } = require("dns");
 const initializeSocket = require("./utils/socket");
+const chatRouter = require("./routes/chat");
 const port = process.env.PORT || 3000;
 
 //! importance of express.json() middleware.
@@ -34,12 +35,7 @@ app.use(cookieParser());
 //* as frontend is hosted n different localhost port so, it will throw a cors error so , we have to use this cors middleware to handle that issue , just install cors library using npm i cors and then here ue it as a middleware in app.js
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:8080",
-      "https://x4r69l6j-5173.inc1.devtunnels.ms",
-      "https://dev-connect1234.netlify.app",
-    ], //*(Whatever your frontend url is)
+    origin: ["http://localhost:5173", "https://dev-connect1234.netlify.app"], //*(Whatever your frontend url is)
     credentials: true, // *<= Accept credentials (cookies) sent by the client
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -53,6 +49,7 @@ app.use("/", profileRouter);
 app.use("/", connectionRequestRouter);
 app.use("/", userRouter);
 app.use("/", paymentRouter);
+app.use("/", chatRouter);
 app.get("/", (req, res) => {
   res.json({ message: "Successfully running on render" });
 });

@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 //* requiring bcrypt library after installing
 const bcrypt = require("bcrypt");
 //* to create  schema we have to call a method on mongoose named mongoose.Schema({}), inside that we can write a object where we can write the schema for our users, for each field we have to define the type of the value of each field/ property inside a object.
-require("dotenv").config();//*importing env file
+require("dotenv").config(); //*importing env file
 
 const userSchema = new mongoose.Schema(
   {
@@ -77,6 +77,17 @@ const userSchema = new mongoose.Schema(
     },
     membershipType: {
       type: String,
+    },
+    status: {
+      //* field added to store user's online status information
+      type: String,
+      enum: ["online", "offline"],
+      default: "offline",
+    },
+    lastSeen: {
+      //* field added to store user's lastSeen  information
+      type: Date,
+      default: Date.now(),
     },
   },
   {
