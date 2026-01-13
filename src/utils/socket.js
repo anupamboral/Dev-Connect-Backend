@@ -32,7 +32,8 @@ const initializeSocket = (server) => {
     },
   });
 
-  // Middleware to authenticate every new connection
+  /*
+  //* as in production frontend was not sending the token while creating the socket connection so in backend we disabled this feature for production 
   io.use((socket, next) => {
     // Access token sent from client-side 'auth' object
     const authToken = socket.handshake.auth.token;
@@ -73,11 +74,10 @@ const initializeSocket = (server) => {
 
       // console.log("id:-" + _id);
       next();
-    });
     //* Automatic Disconnection: When next(err) is called in the middleware, the connection is refused immediately. The connection event on the server will never fire for that specific client.
 
     //*Reconnection Logic: By default, Socket.io might try to reconnect automatically. If the error is a permanent authentication failure (e.g., invalid token), you should manually call socket.disconnect() or socket.close() in your connect_error handler to prevent infinite retry loops.
-  });
+  });*/
 
   //* listening for the socket requests
   io.on("connection", (socket) => {
