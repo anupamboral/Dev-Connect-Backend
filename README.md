@@ -1,21 +1,17 @@
 # 🚀 Dev-Connect (Backend) 💻✨
 
-[![Node.js Version](img.shields.io)](nodejs.org)
-[![Express.js](img.shields.io)](expressjs.com)
-[![License: MIT](img.shields.io)](opensource.org)
-
 **Dev-Connect** is a high-performance full-stack social networking ecosystem built specifically for developers. This backend handles real-time communication, scalable data management, and secure monetization flows using the MERN stack.
 
 ---
 
 ## 🛠️ Technical Stack
 
-- **Runtime:** [Node.js](nodejs.org)
-- **Framework:** [Express.js](expressjs.com)
-- **Database:** [MongoDB](www.mongodb.com) (Mongoose ODM)
-- **Real-time:** [Socket.io](socket.io)
-- **Payments:** [Razorpay API](razorpay.com)
-- **Security:** JWT (JSON Web Tokens) & [Bcrypt](www.npmjs.com)
+- **Runtime:** [Node.js](https://nodejs.org/en)
+- **Framework:** [Express.js](https://expressjs.com/)
+- **Database:** [MongoDB](https://www.mongodb.com/) (Mongoose ODM)
+- **Real-time:** [Socket.io](https://socket.io/)
+- **Payments:** [Razorpay API](https://razorpay.com/)
+- **Security:** [JWT (JSON Web Tokens)](https://www.jwt.io/) & [Bcrypt](https://www.npmjs.com/package/bcrypt)
 
 ---
 
