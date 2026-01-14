@@ -77,26 +77,33 @@ Built-in WebSocket support ensures a "live" feel across the platform:
 ```bash
 git clone github.com
 cd Dev-Connect-Backend
+```
 
+### Install Dependencies
 
-Install Dependencies
-bash
+```bash
 npm install
+```
 
-Environment Setup
-Create a .env file and add your credentials:
-env
+### Environment Setup
+
+### Create a .env file and add your credentials:
+
+```env
 PORT=4000
 MONGO_URI=your_mongodb_uri
 JWT_SECRET=your_secret_key
 RAZORPAY_KEY_ID=your_key
 RAZORPAY_KEY_SECRET=your_secret
-
-Run the Server
-bash
-npm start
-
-🌟 Acknowledgments
-Special thanks to Akshay Saini 🚀 and the NamasteDev community. The "Namaste Node.js" course was the driving force behind the architectural patterns used in this project.
-Developed with ❤️ by Anupam Boral
 ```
+
+### Run the Server
+
+```bash
+npm start
+```
+
+### 🌟 Acknowledgments
+
+- Special thanks to **Akshay Saini 🚀** and the **NamasteDev** community. The **Namaste Node.js** course was the driving force behind the architectural patterns used in this project.
+- Developed with ❤️ by **Anupam Boral**
