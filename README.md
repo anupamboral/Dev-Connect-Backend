@@ -6,7 +6,7 @@
 
 ## 🛠️ Technical Stack
 
-- **Runtime:** [Node.js](https://nodejs.org/en)
+- **Runtime:** [![Node.js Version](https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/1280px-Node.js_logo.svg.png)](https://nodejs.org/en)
 - **Framework:** [Express.js](https://expressjs.com/)
 - **Database:** [MongoDB](https://www.mongodb.com/) (Mongoose ODM)
 - **Real-time:** [Socket.io](https://socket.io/)
