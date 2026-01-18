@@ -1,12 +1,15 @@
 # 🚀 Dev-Connect (Backend) 💻✨
 
+[![Node.js Version](https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/1280px-Node.js_logo.svg.png)](nodejs.org)
+[![Express.js](https://camo.githubusercontent.com/c11f7ea3562755c1f38c4f21228c71772b6eb34365ee97802fe17028cee29ffc/68747470733a2f2f692e636c6f756475702e636f6d2f7a6659366c4c376546612d3330303078333030302e706e67)](expressjs.com)
+
 **Dev-Connect** is a high-performance full-stack social networking ecosystem built specifically for developers. This backend handles real-time communication, scalable data management, and secure monetization flows using the MERN stack.
 
 ---
 
 ## 🛠️ Technical Stack
 
-- **Runtime:** [![Node.js Version](https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/120px-Node.js_logo.svg.png)](https://nodejs.org/en)
+- **Runtime:** [Node.js](https://nodejs.org/en)
 - **Framework:** [Express.js](https://expressjs.com/)
 - **Database:** [MongoDB](https://www.mongodb.com/) (Mongoose ODM)
 - **Real-time:** [Socket.io](https://socket.io/)
