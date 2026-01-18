@@ -1,6 +1,6 @@
 # 🚀 Dev-Connect (Backend) 💻✨
 
-[![Node.js Version](https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/110px-Node.js_logo.svg.png)](https://nodejs.org/en)
+[![Node.js Version](https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/120px-Node.js_logo.svg.png)](https://nodejs.org/en)
 [![Express.js](https://miro.medium.com/v2/resize:fit:120/format:webp/1*7G9vb_q5MA8_C_8HtwMfqw.png)](https://expressjs.com/)
 [![MongoDB](https://miro.medium.com/v2/resize:fit:120/format:webp/0*BaHFkI0EwvpYPmnU.jpg)](https://www.mongodb.com/)
 
