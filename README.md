@@ -100,7 +100,7 @@ RAZORPAY_KEY_SECRET=your_secret
 ### Run the Server
 
 ```bash
-npm start
+npm run dev
 ```
 
 ### 🌟 Acknowledgments
